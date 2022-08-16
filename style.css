@@ -1,0 +1,43 @@
+body{
+    background:#000;
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+}
+
+canvas{
+    margin: 10px;
+}
+
+
+input[type=button]{
+    cursor: pointer;
+    transition-duration: 0.3s;
+}
+
+input[type=button]:hover{
+    transform: translate3d(-5px, -5px, 0px);
+    box-shadow: 6px 6px 3px 2px #aaa;
+}
+
+input[type=button]:active{
+    cursor: wait;
+    transform: translate3d(0px, 0px, 0px);
+    box-shadow: none;
+}
+
+
+div#ControlMenu{
+    padding: 10px;
+}
+
+
+div#CreateForm{
+    position: fixed;
+    padding: 10px;
+    left: 30%;
+    top: 30%;
+    background:#fff;
+    border: 2px solid #0f0;
+    border-radius: 5px;
+}
