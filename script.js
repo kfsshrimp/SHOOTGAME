@@ -1,17 +1,20 @@
 (()=>{
     Ex = {
-        config:{
-            map:{
-                w:20,
-                h:20
-            }
-        },
+        id:"act_game",
+        config:{},
         anima_timer:{},
         flag:{
             key:{
-                speed:1
+                
             },
-            ControlDirSet:null
+            mousemove:{
+
+            },
+            Storage:{
+                local:{},
+                session:{}
+            },
+            game_start:false
         },
         canvas:{},
         css:(url_ary)=>{
@@ -30,22 +33,20 @@
 
             for(let i in url_ary)
             {
-                setTimeout(()=>{
-                    var js = document.createElement("script");
-                    js.src = `${url_ary[i]}?s=${new Date().getTime()}`;
-                    document.head.appendChild(js);
-                },i*200);
+                var js = document.createElement("script");
+                js.src = `${url_ary[i]}?s=${new Date().getTime()}`;
+                document.head.appendChild(js);
             }
         },
         init:()=>{
 
-            Ex.js(
-                [
-                    'https://kfs-plurk-default-rtdb.firebaseio.com/',
-                    "CanvasClass.js",
-                    "EditClass.js"
-                ]
-            );
+            Ex.js([
+                "https://www.gstatic.com/firebasejs/5.5.6/firebase.js",
+                "CanvasClass.js",
+                "EditClass.js",
+                "ConfigClass.js",
+                "AIClass.js"
+            ]);
 
             Ex.css(
                 ["style.css"]
@@ -53,124 +54,25 @@
             
         },
         func:{
+
+            StorageUpd:(set)=>{
+                
+                if(set)
+                {
+                    Ex.flag.Storage.local = JSON.parse(localStorage[Ex.id]||`{}`);
+                    Ex.flag.Storage.session = JSON.parse(sessionStorage[Ex.id]||`{}`);
+                }
+                else
+                {
+                    localStorage[Ex.id] = JSON.stringify(Ex.flag.Storage.local);
+                    sessionStorage[Ex.id] = JSON.stringify(Ex.flag.Storage.session);
+                }
+
+            },
             
-            canvas:()=>{
+            MouseMove:(e)=>{
 
-                if(Ex.canvas.c!==undefined) return;
-
-                Ex.canvas = new CanvasClass({
-                    
-                    background:{
-                        url:'https://truth.bahamut.com.tw/s01/201401/86d7f4e508d07fc7a38a99688213e327.JPG',
-                        
-                    },
-                    config:{
-
-                    },
-                    c_config:{
-                        
-                    },
-                    c2d_config:{
-                        
-                    },
-                    map:{
-
-                    },
-                    point:{
-                        /*
-                        bullet:{
-                            x:200,
-                            y:500,
-                            w:10,
-                            h:10,
-                            color:"#f50",
-                            control:{
-                                speed:3,
-                                dir:{
-                                    x:0,
-                                    y:-1
-                                }
-                            }
-                        }*/
-
-                    },
-                    unit:{
-                        /*
-                        img:{
-                            type:"unit",
-                            id:"img",
-                            src:'https://avatars.plurk.com/14556765-big9788529.jpg',
-                            x:200,
-                            y:200,
-                            hp:100,
-                            atk:5,
-                            control:{
-                                up:'Keyw'.toString().toUpperCase(),
-                                down:'Keys'.toString().toUpperCase(),
-                                right:'Keyd'.toString().toUpperCase(),
-                                left:'KeyA'.toString().toUpperCase(),
-                                shoot:'KeyZ'.toString().toUpperCase(),
-                                speed:3
-                            }
-                        },
-                        player:{
-                            type:"unit",
-                            id:"player",
-                            x:100,
-                            y:200,
-                            w:20,
-                            h:20,
-                            hp:100,
-                            atk:1000,
-                            color:"#f00",
-                            control:{
-                                up:'ArrowUp'.toString().toUpperCase(),
-                                down:'ArrowDown'.toString().toUpperCase(),
-                                right:'ArrowRight'.toString().toUpperCase(),
-                                left:'ArrowLeft'.toString().toUpperCase(),
-                                shoot:'Numpad0'.toString().toUpperCase(),
-                                speed:5,
-                                
-                            }
-                        },
-                        enemy:{
-                            id:"enemy",
-                            x:300,
-                            y:300,
-                            w:20,
-                            h:20,
-                            color:"#0f0",
-                            control:{
-                                up:'Numpad8'.toString().toUpperCase(),
-                                down:'Numpad2'.toString().toUpperCase(),
-                                right:'Numpad6'.toString().toUpperCase(),
-                                left:'Numpad4'.toString().toUpperCase(),
-                                speed:3
-                                
-                            }
-                        }*/
-                        
-                    }
-                    
-                });
-
-
-                Ex.canvas.c.addEventListener("mousedown",(e)=>{
-
-                    var idx = Object.keys(Ex.canvas.map).length;
-                    
-
-                    Ex.canvas.map["map"+idx] = 
-                    {
-                        type:"map",
-                        x:e.x - e.x%Ex.config.map.w,
-                        y:e.y - e.y%Ex.config.map.h,
-                        w:Ex.config.map.w,
-                        h:Ex.config.map.h,
-                        hp:999,
-                        color:"#000"
-                    };
-                });
+                if(e.target===Ex.canvas.c) Ex.flag.mousemove = e;
 
             },
             KeyDown:(e)=>{
@@ -182,123 +84,79 @@
 
                 Ex.flag.key[e.code.toString().toUpperCase()] = false;
 
-                for(var name in Ex.canvas.unit)
-                {
-                    var obj = Ex.canvas.unit[name];
-                    var control = obj.control;
-
-                    if(control.shoot===e.code.toString().toUpperCase()) Ex.func.Shoot(obj);
-                }
-
             },
             KeyEvent:()=>{
 
-                Ex.func.UserControl();
-                
-                
-            },
-            ClickEvent:(e)=>{
-
-                if(e.target.dataset.event!==undefined)
-                {
-                    switch (e.target.dataset.event){
-
-
-                    }
-                }
+                if(Ex.flag.game_start)
+                    Ex.func.PlayerControl();
                 
             },
-            Shoot:(obj)=>{
-                
-                var x = obj.x + obj.w * obj.control.dir.x;
-                var y = obj.y + obj.h * obj.control.dir.y;
+            BulletShoot:()=>{
 
-                /*
-                if(Ex.flag.shoot[ obj.id ]!==undefined)
+
+                for(let i in Ex.canvas.bullet)
                 {
-                    if(new Date().getTime() - Ex.flag.shoot[ obj.id ]<=obj.control.shoot_speed)
-                    {
-                        return;
-                    }
-                }
-                Ex.flag.shoot[ obj.id ] = new Date().getTime();
-                */
+                    let obj = Ex.canvas.bullet[i];
 
-
-                Ex.canvas.point[ new Date().getTime() ] = {
-                    unit:obj.id,
-                    type:"point",
-                    x:x,
-                    y:y,
-                    w:20,
-                    h:20,
-                    hp:obj.atk||1,
-                    control:{
-                        speed:5,
-                        dir:{
-                            x:obj.control.dir.x,
-                            y:obj.control.dir.y
-                        }
-                    }
-                }
-
-
-            },
-            AutoControl:()=>{
-
-                for(let name in Ex.canvas.point)
-                {
-                    let obj = Ex.canvas.point[name];
-                    let control = obj.control;
 
                     obj._x = obj._x||obj.x;
                     obj._y = obj._y||obj.y;
 
-                    control.speed = control.speed||Ex.flag.key.speed;
-                    control._speed = control._speed||control.speed;
+                    obj.ox = obj.ox||obj.x;
+                    obj.oy = obj.oy||obj.y;
+
+                    obj._speed = obj._speed||obj.speed;
+
+                    if(obj.ox>obj.x2) obj.x_d = -1;
+                    if(obj.ox<obj.x2) obj.x_d = 1;
+                    if(obj.ox===obj.x2) obj.x_d = 0;
+
+                    if(obj.oy>obj.y2) obj.y_d = -1;
+                    if(obj.oy<obj.y2) obj.y_d = 1;
+                    if(obj.oy===obj.y2) obj.y_d = 0;
+
+                    
+                    obj.x_l = Math.abs(obj.ox-obj.x2);
+                    obj.y_l = Math.abs(obj.oy-obj.y2);
+
+                    obj.x_p = (obj.x_l/obj.y_l>1)?1:(obj.x_l/obj.y_l);
+                    obj.y_p = (obj.y_l/obj.x_l>1)?1:(obj.y_l/obj.x_l);
 
 
-                    obj._x+=parseFloat(control.speed)*control.dir.x;
-                    obj._y+=parseFloat(control.speed)*control.dir.y;
+                    obj._x+=parseFloat(obj.speed)*obj.x_d*obj.x_p;
+                    obj._y+=parseFloat(obj.speed)*obj.y_d*obj.y_p;
 
-                    var hit_obj = Ex.func.CollisionCheck(obj);
 
-                    if(hit_obj)
+                    var hit_obj = Ex.func.BulletCollision(obj);
+
+                    if( hit_obj!==false )
                     {
-                        var hit_obj_key;
 
-                        Object.keys(Ex.canvas.unit).concat(Object.keys(Ex.canvas.map)).concat(Object.keys(Ex.canvas.point)).forEach(k=>{
 
-                            let o = Ex.canvas.unit[k]||Ex.canvas.map[k]||Ex.canvas.point[k];
-
-                            if(o===hit_obj)
-                            {
-                                hit_obj_key = k;
-                            }
-                        });
-
-                        hit_obj.hp-=obj.hp;
-
-                        if(hit_obj.hp<=0)
+                        if(hit_obj.hp>obj.hp)
                         {
-                            delete Ex.canvas[hit_obj.type][hit_obj_key];
+                            hit_obj.hp-=obj.hp;
+                            delete Ex.canvas.bullet[i];
                         }
-                        else
+                        else if(hit_obj.hp<obj.hp)
                         {
-                            delete Ex.canvas.point[name];
+                            obj.hp-=hit_obj.hp;
+
+                            delete Ex.canvas[hit_obj.type][hit_obj.id];
+                        }
+                        else if(hit_obj.hp===obj.hp)
+                        {
+                            delete Ex.canvas.bullet[i];
+                            delete Ex.canvas[hit_obj.type][hit_obj.id];
                         }
 
-                        
-
-                        obj._x = obj.x;
-                        obj._y = obj.y;
                     }
                     else
                     {
                         obj.x = parseInt(obj._x);
                         obj.y = parseInt(obj._y);
-
-                        control.speed = control._speed;
+    
+                        obj.speed = obj._speed;
                     }
 
 
@@ -307,148 +165,278 @@
                         obj._y+obj.h<=0 || obj._y>=Ex.canvas.c.height
                     )
                     {
-                        delete Ex.canvas.point[name];
+                        delete Ex.canvas.bullet[i];
                     }
-
-
+                    
                 }
 
             },
-            UserControl:()=>{
+            PlayerControl:()=>{
 
-                for(var name in Ex.canvas.unit)
+                for(var name in Ex.canvas.player)
                 {
-                    var obj = Ex.canvas.unit[name];
+                    var obj = Ex.canvas.player[name];
                     var control = obj.control;
                     
                     obj._x = obj._x||obj.x;
                     obj._y = obj._y||obj.y;
 
-                    control.speed = control.speed||Ex.flag.key.speed;
-                    control._speed = control._speed||control.speed;
+                    obj._speed = obj._speed||obj.speed;
 
-                    control.dir = control.dir||{};
-
-                    control.dir.x = (control.dir.x===undefined)?1:control.dir.x;
-                    control.dir.y = (control.dir.y===undefined)?0:control.dir.y;
-
-
-                    if(Ex.flag.key[control.left])obj._x-=parseFloat(control.speed);
-                    if(Ex.flag.key[control.right])obj._x+=parseFloat(control.speed);
-                    if(Ex.flag.key[control.up])obj._y-=parseFloat(control.speed);
-                    if(Ex.flag.key[control.down])obj._y+=parseFloat(control.speed);
+                    if(Ex.flag.key[control.left])obj._x-=parseFloat(obj.speed);
+                    if(Ex.flag.key[control.right])obj._x+=parseFloat(obj.speed);
+                    if(Ex.flag.key[control.up])obj._y-=parseFloat(obj.speed);
+                    if(Ex.flag.key[control.down])obj._y+=parseFloat(obj.speed);
 
                     if(Ex.flag.key[control.left] || 
                     Ex.flag.key[control.right] ||
                     Ex.flag.key[control.up] || 
                     Ex.flag.key[control.down])
                     {
-                        if(Ex.func.CollisionCheck(obj))
+
+                        if(Ex.func.PlayerCollision(obj)!==false)
                         {
                             obj._x = obj.x;
                             obj._y = obj.y;
                             
-                            control.speed-=1;
+                            obj.speed-=1;
                         }
                         else
                         {
                             obj.x = parseInt(obj._x);
                             obj.y = parseInt(obj._y);
-
-                            Ex.func.DirCheck(obj);
                             
-                            control.speed = control._speed;
+                            obj.speed = obj._speed;
                         }
+
                     }
+
+
                     
-
-                    //if(Ex.flag.key[control.shoot]) Ex.func.Shoot(obj);
-
+                    Ex.func.PlayerShoot(obj);
                 }
 
             },
-            DirCheck:(obj)=>{
+            BulletCollision:(obj)=>{
 
-                var control = obj.control;
+                var _r = false;
 
-                control.dir = control.dir||{};
+                
+                Object.values(Ex.canvas.enemy).concat(Object.values(Ex.canvas.player)).forEach(hit_obj=>{
 
-                control.dir.x = control.dir.x||1;
-                control.dir.y = control.dir.y||0;
+                    if(hit_obj.id===obj.unit.id) return;
+
+                    if(
+                        obj._x       <= hit_obj.x+hit_obj.w && 
+                        obj._y       <= hit_obj.y+hit_obj.h && 
+                        obj._x+obj.w >= hit_obj.x && 
+                        obj._y+obj.h >= hit_obj.y 
+                    ) 
+                    _r = hit_obj;
+
+                });
+
+                Object.values(Ex.canvas.wall).forEach(hit_obj=>{
+
+                    
+                    if(
+                        obj._x       <= hit_obj.x+hit_obj.w && 
+                        obj._y       <= hit_obj.y+hit_obj.h && 
+                        obj._x+obj.w >= hit_obj.x && 
+                        obj._y+obj.h >= hit_obj.y 
+                    ) 
+                    _r = hit_obj;
+
+                });
+
+                Object.values(Ex.canvas.bullet).forEach(hit_obj=>{
+
+                    if(obj===hit_obj) return;
+                    if(obj.unit.id===hit_obj.unit.id) return;
+                    
+                    if(
+                        obj._x       <= hit_obj.x+hit_obj.w && 
+                        obj._y       <= hit_obj.y+hit_obj.h && 
+                        obj._x+obj.w >= hit_obj.x && 
+                        obj._y+obj.h >= hit_obj.y 
+                    ) 
+                    _r = hit_obj;
+
+                });
 
 
-                if(Ex.flag.key[control.left]) control.dir.x = -1;
-                if(Ex.flag.key[control.right]) control.dir.x = 1;
-                if(Ex.flag.key[control.up]) control.dir.y = -1;
-                if(Ex.flag.key[control.down]) control.dir.y = 1;
+                
 
-
-                if((Ex.flag.key[control.left] || Ex.flag.key[control.right]) && 
-                    (!Ex.flag.key[control.down] && !Ex.flag.key[control.up]))
-                {
-                    control.dir.y = 0;
-                }
-
-                if((Ex.flag.key[control.down] || Ex.flag.key[control.up]) && 
-                    (!Ex.flag.key[control.left] && !Ex.flag.key[control.right]))
-                {
-                    control.dir.x = 0;
-                }
-
+                return _r;
 
 
             },
-            CollisionCheck:(obj)=>{
+            PlayerCollision:(obj)=>{
 
-                var _return = false;
+                var _r = false;
 
                 if(
                     (
                         obj._x<=0 || obj._x+obj.w>=Ex.canvas.c.width || 
                         obj._y<=0 || obj._y+obj.h>=Ex.canvas.c.height
-                    ) && 
-                    !Object.values(Ex.canvas.point).includes(obj)
+                    )
+                ) _r = true;
 
-                ) _return = true;
 
-                
-                Object.keys(Ex.canvas.unit).concat(Object.keys(Ex.canvas.map)).concat(Object.keys(Ex.canvas.point)).forEach(k=>{
-
-                    let o = Ex.canvas.unit[k]||Ex.canvas.map[k]||Ex.canvas.point[k];
-
-                    if(o===obj) return;
-                    if(o.unit!==undefined && obj.unit!==undefined && o.unit===obj.unit) return;
+                Object.values(Ex.canvas.enemy).forEach(hit_obj=>{
 
                     if(
-                        obj._x+obj.w>=o.x && 
-                        obj._x<=o.x+o.w && 
-                        obj._y+obj.h>=o.y && 
-                        obj._y<=o.y+o.h
-                    )
-                    {
-                        _return = o;
-                    }
+                        obj._x       <= hit_obj.x+hit_obj.w && 
+                        obj._y       <= hit_obj.y+hit_obj.h && 
+                        obj._x+obj.w >= hit_obj.x && 
+                        obj._y+obj.h >= hit_obj.y 
+                    ) 
+                    _r = hit_obj;
 
                 });
 
-                return _return;
+                Object.values(Ex.canvas.wall).forEach(hit_obj=>{
+
+                    
+                    if(
+                        obj._x       <= hit_obj.x+hit_obj.w && 
+                        obj._y       <= hit_obj.y+hit_obj.h && 
+                        obj._x+obj.w >= hit_obj.x && 
+                        obj._y+obj.h >= hit_obj.y 
+                    ) 
+                    _r = hit_obj;
+
+                });
+
+                Object.values(Ex.canvas.bullet).forEach(hit_obj=>{
+
+                    if(hit_obj.unit.id===obj.id) return;
+                    
+                    if(
+                        obj._x       <= hit_obj.x+hit_obj.w && 
+                        obj._y       <= hit_obj.y+hit_obj.h && 
+                        obj._x+obj.w >= hit_obj.x && 
+                        obj._y+obj.h >= hit_obj.y 
+                    ) 
+                    _r = hit_obj;
+
+                });
+
+                return _r;
+            },
+            PlayerShoot:(obj)=>{
+
+                var shoot_limit =  1000 * (1-obj.speed_shoot*0.01);
+
+                if(new Date().getTime() - obj.shoot_last_time < shoot_limit )
+                {
+                    return;
+                }
+
+                var x = Ex.flag.mousemove.offsetX||Ex.canvas.c.width;
+                var y = Ex.flag.mousemove.offsetY||Math.floor(Ex.canvas.c.height/2);
+
+                obj.shoot_last_time = new Date().getTime();
+
+                var id = `${obj.id}_${new Date().getTime()}`;
+
+                Ex.canvas.bullet[ id ] = {
+                    id:id,
+                    unit:{
+                        id:obj.id,
+                        type:obj.type
+                    },
+                    type:"bullet",
+                    x:obj.x,
+                    y:obj.y,
+                    x2:x,
+                    y2:y,
+                    w:obj.bullet.w,
+                    h:obj.bullet.h,
+                    hp:obj.bullet.hp,
+                    speed:obj.bullet.speed
+                }
+            },
+            EnemyShoot:(obj,x,y)=>{
+
+
+                var shoot_limit =  1000 * (1-obj.speed_shoot*0.01);
+
+                if(new Date().getTime() - obj.shoot_last_time < shoot_limit )
+                {
+                    return;
+                }
+
+
+                obj.shoot_last_time = new Date().getTime();
+
+                var id = `${obj.id}_${new Date().getTime()}`;
+
+                for(var i=0;i<x.length;i++)
+                {
+                    Ex.canvas.bullet[ id + i ] = {
+                        id:id + i,
+                        unit:{
+                            id:obj.id,
+                            type:obj.type
+                        },
+                        type:"bullet",
+                        x:obj.x,
+                        y:obj.y,
+                        x2:x[i],
+                        y2:y[i],
+                        w:obj.bullet.w,
+                        h:obj.bullet.h,
+                        hp:obj.bullet.hp,
+                        speed:obj.bullet.speed
+                    }
+                }
+
+
             }
+            
+        },
+        CheckMobi:()=>{
+            if(
+                /Mobi|Android|iPhone/i.test(navigator.userAgent) ||
+                window.screen.width < 500 ||
+                ('ontouchstart' in document.documentElement) || 
+                window.matchMedia("only screen and (max-width: 760px)").matches ||
+                window.matchMedia("(pointer:coarse)").matches
+            ){
+                return true;
+            }
+
+            return false;
         }
     };
 
 
     window.onload = ()=>{
 
+
+        if( Ex.CheckMobi() )
+        {
+            alert("程式不支援手機版");
+            return;
+        }
+
+
+        Ex.func.StorageUpd( true );
+
+
+
         Ex.init();
         
-        Ex.anima_timer = ()=>{
+        Ex.Ref = ()=>{
             try{
 
                 Ex.func.KeyEvent();
 
-                Ex.func.AutoControl()
+                Ex.func.BulletShoot();
+                
 
-                requestAnimationFrame(Ex.anima_timer);
+                Ex.anima_timer = requestAnimationFrame(Ex.Ref);
 
             }catch(e){
 
@@ -456,89 +444,75 @@
             }
         }
         
-        Ex.anima_timer();
-        
+        Ex.Ref();
+
+
+        var _class = [
+            "CanvasClass",
+            "EditClass",
+            "ConfigClass",
+            "AIClass",
+            "firebase"
+        ];
 
         var _t = setInterval(()=>{
-            
-            if( typeof(EditClass)!=="undefined" )
-            {
-                Ex.EditMode = new EditClass();
-                //Ex.func.canvas();
+
+            try{
+                _class.forEach(o=>eval(o));
+
+
+                Ex.config = new ConfigClass();
+
+                Ex.DB = firebase;
+                Ex.DB.initializeApp({databaseURL:Ex.config.DB.url});
+                Ex.DB = Ex.DB.database();
+
+
+                
+                Ex.EditClass = new EditClass();
+                Ex.EditClass.config = Ex.config;
+
+
+                
+
+                
+
                 clearInterval(_t);
-            }
+
+                
+
+            }catch(e){
+
+                console.log('Load Class');
+            }      
+
         },1);
 
-  
+
         
 
+        window.addEventListener("mousemove",Ex.func.MouseMove);
         window.addEventListener("keydown",Ex.func.KeyDown);
         window.addEventListener("keyup",Ex.func.KeyUp);
         window.addEventListener("click",Ex.func.ClickEvent)
 
-
+        //window.addEventListener("blur",()=>{Ex.EditClass.GamePause('pause');});
     }
+
+
+
+
+
+
+
+
+
+
+
+
 
 })();
 
 
 
-//https://yt3.ggpht.com/im_UdJB08y9LAIcLGQLYl4NbAiPx_Er7X2flr_VdB0xoavcIbD343Xmjdf79GZQy3xXNiNY1Dw=s48-c-k-c0x00ffffff-no-rj
 
-
-
-
-/*
-var x,y,_x,_y,_t,p,s = 2;
-window.onload = ()=>{
-    
-
-    p = document.querySelector("div");
-
-    _x = true;
-    _y = true;
-
-    requestAnimationFrame(F);
-
-    _t = setInterval(()=>{
-        return;
-        x = parseInt(p.style.left);
-        y = parseInt(p.style.top);
-
-
-        (x>=window.innerWidth-10)? _x = false:"";
-        (y>=window.innerHeight-10)? _y = false:"";
-
-        (x<=0)? _x = true:"";
-        (y<=0)? _y = true:"";
-
-
-        (_x)?p.style.left = x+1:p.style.left = x-1;
-        (_y)?p.style.top = y+1:p.style.top = y-1;
-        
-
-
-    },2);
-
-
-}
-
-
-F = ()=>{
-    x = parseInt(p.style.left);
-    y = parseInt(p.style.top);
-
-
-    (x>=window.innerWidth-10)? _x = false:"";
-    (y>=window.innerHeight-10)? _y = false:"";
-
-    (x<=0)? _x = true:"";
-    (y<=0)? _y = true:"";
-
-
-    (_x)?p.style.left = x+s:p.style.left = x-s;
-    (_y)?p.style.top = y+s:p.style.top = y-s;
-
-    requestAnimationFrame(F);
-}
-*/

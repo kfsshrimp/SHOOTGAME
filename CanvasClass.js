@@ -6,29 +6,13 @@ class CanvasClass{
 
         this.c = document.createElement("canvas");
         this.c2d = this.c.getContext("2d");
-        this.unit = this.unit||{};
-        this.point = this.point||{};
-        this.map = this.map||{};
+        this.player = this.player||{};
+        this.enemy = this.enemy||{};
+        this.bullet = this.bullet||{};
+        this.wall = this.wall||{};
 
-        this.config = {
-            msg:{
-                height_width_error:"高寬設定錯",
-                canvas_exist:"地圖已存在"
-            },
-            hw:{
-                hp:{w:50,h:5}
-            },
-            color:{
-                background:"#fff",
-                point:"#f00",
-                unit:"#00f",
-                dir:"#f003",
-                hp:["#fff9","#0f09"],
-            }
-        };
-        this.flag = {
-            background:'img'
-        }
+        this.flag = {}
+
 
         for(var key in opt.c_config)
         {
@@ -59,7 +43,6 @@ class CanvasClass{
 
                 this.c.width = this.background.width;
                 this.c.height = this.background.height;
-                this.c.color = "#fff";
     
                 if(
                     parseInt(this.background.width).toString()==='NaN' || 
@@ -77,8 +60,6 @@ class CanvasClass{
 
         );
 
-       
-
 
         this.background.img.src = this.background.url;
 
@@ -89,7 +70,6 @@ class CanvasClass{
 
         try{
 
-
             this.Draw({
                 img:this.background.img,
                 img_error:this.background.img_error,
@@ -97,103 +77,155 @@ class CanvasClass{
                 y:0,
                 w:this.c.width,
                 h:this.c.height,
-                c:this.config.color.background
+                c:this.config.info.background.color
             });
 
 
 
-            for(var key in this.map)
+            for(var key in this.wall)
             {
-                var unit = this.map[key];
+                var wall = this.wall[key];
 
                 this.Draw({
-                    x:unit.x,
-                    y:unit.y,
-                    w:unit.w,
-                    h:unit.h,
-                    c:unit.color
+                    x:wall.x,
+                    y:wall.y,
+                    w:wall.w,
+                    h:wall.h,
+                    c:this.config.info.background.wall.color
                 });
             }
 
-            for(var key in this.point)
+            for(var key in this.bullet)
             {
-                var point = this.point[key];
+                var bullet = this.bullet[key];
+
+                if(this[bullet.unit.type][bullet.unit.id]===undefined)
+                {
+                    delete this.bullet[key];
+                    continue;
+                }
 
                 this.Draw({
-                    img:this.unit[point.unit].img_list.shoot.img,
-                    img_error:this.unit[point.unit].img_list.shoot.img_error,
-                    x:point.x,
-                    y:point.y,
-                    w:point.w,
-                    h:point.h,
-                    c:this.config.color.point
+                    img:this[bullet.unit.type][bullet.unit.id].img_list.bullet.img,
+                    img_error:this[bullet.unit.type][bullet.unit.id].img_list.bullet.img_error,
+                    x:bullet.x,
+                    y:bullet.y,
+                    w:bullet.w,
+                    h:bullet.h,
+                    c:this.config.info[bullet.unit.type].bullet.color
                 });
             }
-    
-            for(var key in this.unit)
-            {
-                var unit = this.unit[key];
 
-                unit.w = 20;
-                unit.h = 20;
+            for(var key in this.enemy)
+            {
+                var enemy = this.enemy[key];
 
                 this.Draw({
-                    img:unit.img_list.self.img,
-                    img_error:unit.img_list.self.img_error,
-                    x:unit.x,
-                    y:unit.y,
-                    w:unit.w,
-                    h:unit.h,
-                    c:this.config.color.unit
+                    img:enemy.img_list.self.img,
+                    img_error:enemy.img_list.self.img_error,
+                    x:enemy.x,
+                    y:enemy.y,
+                    w:enemy.w,
+                    h:enemy.h,
+                    c:this.config.info.enemy.color
                 });
 
-              
+                this.HpShow(enemy);
+            }
 
-                if(unit.control.dir!==undefined)
-                {
-                    this.Draw({
-                        x:unit.x + unit.w * unit.control.dir.x,
-                        y:unit.y + unit.h * unit.control.dir.y,
-                        w:unit.w,
-                        h:unit.h,
-                        c:this.config.color.dir
-                    });
-                }
-
-                if(unit.hp!==undefined)
-                {
-                    unit._hp = unit._hp||unit.hp;
-
-                    this.Draw({
-                        x:unit.x ,
-                        y:unit.y - Math.floor(unit.h/2),
-                        w:this.config.hw.hp.w,
-                        h:this.config.hw.hp.h,
-                        c:this.config.color.hp[0]
-                    });
     
-                    this.Draw({
-                        x:unit.x ,
-                        y:unit.y - Math.floor(unit.h/2),
-                        w:Math.floor(unit.hp/unit._hp * this.config.hw.hp.w),
-                        h:this.config.hw.hp.h,
-                        c:this.config.color.hp[1]
-                    });
+            for(var key in this.player)
+            {
+                var player = this.player[key];
 
-                }
+
+                this.Draw({
+                    img:player.img_list.self.img,
+                    img_error:player.img_list.self.img_error,
+                    x:player.x,
+                    y:player.y,
+                    w:player.w,
+                    h:player.h,
+                    c:this.config.info.player.color
+                });
+
+                //this.UnitArcRange(player);
+
+                this.HpShow(player);
             }
 
             this.anima_timer = requestAnimationFrame(this.Ref);
 
         }catch(e){
             console.log(e);
+
             return;
         }
         
     }
 
 
+    HpShow = (obj)=>{
+
+        obj._hp = obj._hp||obj.hp;
+
+        this.Draw({
+            x:obj.x ,
+            y:obj.y - Math.floor(obj.h/2),
+            w:obj.w*2,
+            h:this.config.info[obj.type].hp.h,
+            c:this.config.info[obj.type].hp.color[0]
+        });
+
+        this.Draw({
+            x:obj.x ,
+            y:obj.y - Math.floor(obj.h/2),
+            w:Math.floor(obj.hp/obj._hp * obj.w)*2,
+            h:this.config.info[obj.type].hp.h,
+            c:this.config.info[obj.type].hp.color[1]
+        });
+
+    }
+
+
+    UnitArcRange = (unit)=>{
+
+
+        let start = -0.5,end = 1.5;
+        unit.x_d = (unit.x_d===undefined)?0:unit.x_d;
+        unit.y_d = (unit.y_d===undefined)?0:unit.y_d;
+
+     
+        if(unit.x_d===0 && unit.y_d===-1) {start = 0.3;end = -1.3;}
+        if(unit.x_d===0 && unit.y_d===1) {start = 1.3;end = 1.7;}
+
+        if(unit.y_d===0 && unit.x_d===1) {start = -0.2;end = 0.2;}
+        if(unit.y_d===0 && unit.x_d===-1) {start = 0.8;end = -0.8;}
+        
+
+        if(unit.x_d===1 && unit.y_d===1){start = -0.5;end = 0;}
+        if(unit.x_d===1 && unit.y_d===-1){start = 0;end = 0.5;}
+
+        if(unit.x_d===-1 && unit.y_d===-1){start = 0.5;end = 1;}
+        if(unit.x_d===-1 && unit.y_d===1){start = 1;end = 1.5;}
+     
+
+        this.Draw({
+            x:unit.x + Math.floor(unit.w/2),
+            y:unit.y + Math.floor(unit.h/2),
+            r:Math.floor(unit.w),
+            start:start,
+            end:end,
+            lineWidth:this.config.hw.dir.w,
+            strokeStyle:this.config.color.dir
+        });
+
+    }
+
+
     Draw = (arg)=>{
+
+        if(this.c2d.drawImage===undefined) return;
 
         if(arg.img!==undefined && !arg.img_error)
         {
@@ -207,20 +239,41 @@ class CanvasClass{
         }
         else
         {
-            this.c2d.beginPath();
+            if(arg.r!==undefined)
+            {
+                this.c2d.beginPath();
 
-            this.c2d.fillStyle = arg.c;
-            //this.c2d.arc(unit.x,unit.y,unit.r,0,360);
-            this.c2d.fillRect(
-                arg.x,
-                arg.y,
-                arg.w,
-                arg.h
-                );
-            
-            this.c2d.fill();
-    
-            this.c2d.closePath();
+                this.c2d.strokeStyle = arg.strokeStyle;
+                this.c2d.lineWidth = arg.lineWidth;
+                this.c2d.arc(
+                    arg.x,
+                    arg.y,
+                    arg.r,
+                    arg.start*Math.PI,
+                    arg.end*Math.PI
+                    );
+
+                this.c2d.stroke();
+        
+                this.c2d.closePath();
+
+            }
+            else
+            {
+                this.c2d.beginPath();
+
+                this.c2d.fillStyle = arg.c;
+                this.c2d.fillRect(
+                    arg.x,
+                    arg.y,
+                    arg.w,
+                    arg.h
+                    );
+
+                this.c2d.fill();
+        
+                this.c2d.closePath();
+            }            
         }
     }
 

@@ -32,7 +32,7 @@ div#ControlMenu{
 }
 
 
-div#CreateForm{
+div[id^="CreateForm"]{
     position: fixed;
     padding: 10px;
     left: 30%;
