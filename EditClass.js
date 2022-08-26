@@ -130,7 +130,7 @@ class EditClass {
                         left:"AI_LEFT"
                     }
 
-                    unit.AI = new AIClass(unit);
+                    unit.AI = new AIClass(unit.id);
                 }
                 
             },
@@ -149,7 +149,7 @@ class EditClass {
                         left:"AI_LEFT"
                     }
 
-                    unit.AI = new AIClass(unit);
+                    unit.AI = new AIClass(unit.id);
                 }
 
             }
@@ -314,6 +314,9 @@ class EditClass {
                             w:parseInt(form.querySelector("#bullet_w").value),
                             h:parseInt(form.querySelector("#bullet_h").value),
                             speed:parseInt(form.querySelector("#bullet_speed").value),
+                            count:parseInt(form.querySelector("#bullet_count").value),
+                            rand:parseInt(form.querySelector("#bullet_rand").value),
+
                         },
                         x: ary.x[ _event ] ,
                         y: ary.y[ _event ],
@@ -334,8 +337,15 @@ class EditClass {
 
                     if(Ex.canvas[ _event ][ _event ]!==undefined)
                     {
+                        unit.x = Ex.canvas[ _event ][ _event ].x;
+                        unit.y = Ex.canvas[ _event ][ _event ].y;
+
+                        console.log(unit);
+
                         unit.img_list = Ex.canvas[ _event ][ _event ].img_list;
+
                         if(unit.type==="enemy") unit.AI = Ex.canvas[ _event ][ _event ].AI;
+
                         Ex.canvas[ _event ][ _event ] = unit;
                     }
                     else
@@ -378,6 +388,8 @@ class EditClass {
                     form.querySelector("#bullet_h").value = unit.bullet.h;
                     form.querySelector("#bullet_speed").value = unit.bullet.speed;
                     form.querySelector("#bullet_hp").value = unit.bullet.hp;
+                    form.querySelector("#bullet_count").value = unit.bullet.count;
+                    form.querySelector("#bullet_rand").value = unit.bullet.rand;
 
                     form.querySelector("#w").value = unit.w;
                     form.querySelector("#h").value = unit.h;
@@ -692,7 +704,7 @@ class EditClass {
         {
             this.CreateUnit(db_json.enemy[name]);
             
-            db_json.enemy[name].AI = new AIClass(db_json.enemy[name]);
+            db_json.enemy[name].AI = new AIClass(db_json.enemy[name].id);
             
         }
     }
@@ -726,7 +738,7 @@ class EditClass {
         {
             this.CreateUnit(db_json.enemy[name]);
             
-            db_json.enemy[name].AI = new AIClass(db_json.enemy[name]);
+            db_json.enemy[name].AI = new AIClass(db_json.enemy[name].id);
             
         }
 
@@ -768,7 +780,7 @@ class EditClass {
                 {
                     this.CreateUnit(json.enemy[name]);
                     
-                    json.enemy[name].AI = new AIClass(json.enemy[name]);
+                    json.enemy[name].AI = new AIClass(json.enemy[name].id);
                     
                 }
         
@@ -933,6 +945,10 @@ class EditClass {
 
                     子彈高：<input id="bullet_h" type="number" value="${this.config.info[name].bullet.h}"><BR>
                     子彈寬：<input id="bullet_w" type="number" value="${this.config.info[name].bullet.w}"><BR>
+
+                    子彈數量：<input id="bullet_count" type="number" value="${this.config.info[name].bullet.count}"><BR>
+
+                    彈道飄移倍率：<input id="bullet_rand" type="number" value="${this.config.info[name].bullet.rand}"><BR>
 
                     <div ${(name==="enemy")?`style="display:none"`:""}>
                         <input id="up" data-value="${this.config.info[name].control.up}" value="上" 

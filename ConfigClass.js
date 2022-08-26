@@ -56,7 +56,9 @@ class ConfigClass{
                     h:20,
                     color:"#f00",
                     hp:5,
-                    speed:10
+                    speed:10,
+                    bullet_count:1,
+                    bullet_rand:2
                 },
                 hp:{
                     color:["#000f","#0f0f"],
@@ -84,7 +86,9 @@ class ConfigClass{
                     h:20,
                     color:"#f00",
                     hp:5,
-                    speed:10
+                    speed:10,
+                    bullet_count:1,
+                    bullet_rand:2
                 },
                 hp:{
                     color:["#000f","#0f0f"],

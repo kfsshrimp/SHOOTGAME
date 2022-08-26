@@ -1,6 +1,6 @@
 class AIClass{
 
-    constructor(enemy){
+    constructor(id){
 
         this.up = ()=>{ 
             Ex.flag.key[ "AI_UP" ] = true;
@@ -19,7 +19,7 @@ class AIClass{
             Ex.flag.key[ "AI_RIGHT" ] = false;
         }
 
-        this.enemy = enemy;
+        this.enemy_id = id;
         this.timer = 1;
         this.opt = {};
 
@@ -51,14 +51,14 @@ class AIClass{
 
     AI_Move = ()=>{
 
-        this.enemy.move_last_time = this.enemy.move_last_time||new Date().getTime();
+        Ex.canvas.enemy[this.enemy_id].move_last_time = Ex.canvas.enemy[this.enemy_id].move_last_time||new Date().getTime();
 
-        if(new Date().getTime() - this.enemy.move_last_time < 500)
+        if(new Date().getTime() - Ex.canvas.enemy[this.enemy_id].move_last_time < 500)
         {
             return;
         }
 
-        this.enemy.move_last_time = new Date().getTime();
+        Ex.canvas.enemy[this.enemy_id].move_last_time = new Date().getTime();
 
        
 
@@ -70,16 +70,16 @@ class AIClass{
 
         var ary = ["up","down","right","left"];
 
-        if(this.enemy.x>Math.floor(Ex.canvas.c.width*0.8)) 
+        if(Ex.canvas.enemy[this.enemy_id].x>Math.floor(Ex.canvas.c.width*0.8)) 
             ary.forEach( (v,k)=>{if(v==="right") ary.splice(k,1)});
 
-        if(this.enemy.x<Math.floor(Ex.canvas.c.width*0.2)) 
+        if(Ex.canvas.enemy[this.enemy_id].x<Math.floor(Ex.canvas.c.width*0.2)) 
             ary.forEach( (v,k)=>{if(v==="left") ary.splice(k,1)});
 
-        if(this.enemy.y>Math.floor(Ex.canvas.c.height*0.8)) 
+        if(Ex.canvas.enemy[this.enemy_id].y>Math.floor(Ex.canvas.c.height*0.8)) 
             ary.forEach( (v,k)=>{if(v==="down") ary.splice(k,1)});
 
-        if(this.enemy.y<Math.floor(Ex.canvas.c.height*0.2)) 
+        if(Ex.canvas.enemy[this.enemy_id].y<Math.floor(Ex.canvas.c.height*0.2)) 
             ary.forEach( (v,k)=>{if(v==="up") ary.splice(k,1)});
 
             
@@ -98,27 +98,16 @@ class AIClass{
 
     AI_Shoot = ()=>{
 
-        var x = [0],y = [Math.floor(Ex.canvas.c.height/2)];
-        for(var i=0;i<3;i++)
-        {
-            var x_r = this.Rand( Math.floor(Ex.canvas.c.width/3) );
-            var y_r = this.Rand( Math.floor(Ex.canvas.c.height/3) ) ;
-
-
-            var plus_minus = this.Rand( [0,1,-1] ) ;
-
-            for(var name in Ex.canvas.player)
-            {
-                x[i] = Ex.canvas.player[name].x;
-                y[i] = Ex.canvas.player[name].y;
-            }
-            x[i]+=x_r*plus_minus;
-            y[i]+=y_r*plus_minus;
-        }
-
-
+        var x = 0,y = Math.floor(Ex.canvas.c.height/2);
         
-        Ex.func.EnemyShoot(this.enemy,x,y);
+        for(var name in Ex.canvas.player)
+        {
+            x = Ex.canvas.player[name].x;
+            y = Ex.canvas.player[name].y;
+        }
+        
+        
+        Ex.func.EnemyShoot(Ex.canvas.enemy[this.enemy_id],x,y);
     }
 
 

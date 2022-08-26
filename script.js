@@ -175,8 +175,8 @@
 
                 for(var name in Ex.canvas.player)
                 {
-                    var obj = Ex.canvas.player[name];
-                    var control = obj.control;
+                    let obj = Ex.canvas.player[name];
+                    let control = obj.control;
                     
                     obj._x = obj._x||obj.x;
                     obj._y = obj._y||obj.y;
@@ -340,22 +340,33 @@
 
                 var id = `${obj.id}_${new Date().getTime()}`;
 
-                Ex.canvas.bullet[ id ] = {
-                    id:id,
-                    unit:{
-                        id:obj.id,
-                        type:obj.type
-                    },
-                    type:"bullet",
-                    x:obj.x,
-                    y:obj.y,
-                    x2:x,
-                    y2:y,
-                    w:obj.bullet.w,
-                    h:obj.bullet.h,
-                    hp:obj.bullet.hp,
-                    speed:obj.bullet.speed
+
+                for(let i=0;i<obj.bullet.count;i++)
+                {
+                    let x_r = Ex.func.Rand( Math.floor(obj.bullet.w*obj.bullet.rand) );
+                    let y_r = Ex.func.Rand( Math.floor(obj.bullet.h*obj.bullet.rand) ) ;
+
+                    let plus_minus = Ex.func.Rand( [0,1,-1] );
+
+
+                    Ex.canvas.bullet[ id + i ] = {
+                        id:id + i,
+                        unit:{
+                            id:obj.id,
+                            type:obj.type
+                        },
+                        type:"bullet",
+                        x:obj.x,
+                        y:obj.y,
+                        x2:x + x_r*plus_minus,
+                        y2:y + y_r*plus_minus,
+                        w:obj.bullet.w,
+                        h:obj.bullet.h,
+                        hp:obj.bullet.hp,
+                        speed:obj.bullet.speed
+                    }
                 }
+                
             },
             EnemyShoot:(obj,x,y)=>{
 
@@ -372,8 +383,13 @@
 
                 var id = `${obj.id}_${new Date().getTime()}`;
 
-                for(var i=0;i<x.length;i++)
+                for(let i=0;i<obj.bullet.count;i++)
                 {
+                    let x_r = Ex.func.Rand( Math.floor(obj.bullet.w*obj.bullet.rand) );
+                    let y_r = Ex.func.Rand( Math.floor(obj.bullet.h*obj.bullet.rand) ) ;
+
+                    let plus_minus = Ex.func.Rand( [0,1,-1] );
+
                     Ex.canvas.bullet[ id + i ] = {
                         id:id + i,
                         unit:{
@@ -383,8 +399,8 @@
                         type:"bullet",
                         x:obj.x,
                         y:obj.y,
-                        x2:x[i],
-                        y2:y[i],
+                        x2:x + x_r*plus_minus,
+                        y2:y + y_r*plus_minus,
                         w:obj.bullet.w,
                         h:obj.bullet.h,
                         hp:obj.bullet.hp,
@@ -393,6 +409,24 @@
                 }
 
 
+            },
+            Rand:(array)=>{
+
+                if( !Array.isArray(array) )
+                {
+                    var _array = [];
+                    for(var i=1;i<=array;i++ ) _array.push(i);
+                    array = _array;
+                }
+        
+                for (let i = array.length - 1; i > 0; i--){
+        
+                    let j = Math.floor(Math.random() * (i + 1));
+        
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+        
+                return array.pop();
             }
             
         },
