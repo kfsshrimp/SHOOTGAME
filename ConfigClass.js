@@ -43,6 +43,12 @@ class ConfigClass{
                     grid:10,
                     hp:9999,
                     color:"#000F"
+                },
+                game_pass:{
+                    color:"#f00"
+                },
+                game_over:{
+                    color:"#00f"
                 }
             },
             player:{
@@ -56,9 +62,9 @@ class ConfigClass{
                     h:20,
                     color:"#f00",
                     hp:5,
-                    speed:10,
-                    bullet_count:1,
-                    bullet_rand:2
+                    speed:5,
+                    count:1,
+                    rand:2
                 },
                 hp:{
                     color:["#000f","#0f0f"],
@@ -79,16 +85,16 @@ class ConfigClass{
                 w:20,
                 h:20,
                 src:"https://avatars.plurk.com/14556765-big9788529.jpg",
-                color:"#000",
+                color:"#00f",
                 bullet:{
                     src:"https://avatars.plurk.com/14556765-big9788529.jpg",
                     w:20,
                     h:20,
                     color:"#f00",
                     hp:5,
-                    speed:10,
-                    bullet_count:1,
-                    bullet_rand:2
+                    speed:5,
+                    count:1,
+                    rand:2
                 },
                 hp:{
                     color:["#000f","#0f0f"],

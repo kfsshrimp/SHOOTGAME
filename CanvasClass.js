@@ -10,6 +10,7 @@ class CanvasClass{
         this.enemy = this.enemy||{};
         this.bullet = this.bullet||{};
         this.wall = this.wall||{};
+        this.other_back = this.other_back||{};
 
         this.flag = {}
 
@@ -24,14 +25,14 @@ class CanvasClass{
             this.c2d[key] = opt.c2d_config[key];
         }
 
-        this.background.img = new Image();
+        this.background.img_list.self.img = new Image();
 
 
-        this.ImgLoad(this.background.img,
+        this.ImgLoad(this.background.img_list.self.img,
             ()=>{
 
-                this.c.width = this.background.img.width;
-                this.c.height = this.background.img.height;
+                this.c.width = this.background.img_list.self.img.width;
+                this.c.height = this.background.img_list.self.img.height;
             
                 document.body.appendChild(this.c);
                 this.Ref();
@@ -39,7 +40,7 @@ class CanvasClass{
             },
             ()=>{
 
-                this.background.img_error = true;
+                this.background.img_list.self.img_error = true;
 
                 this.c.width = this.background.width;
                 this.c.height = this.background.height;
@@ -57,28 +58,29 @@ class CanvasClass{
                 this.Ref();
 
             }
-
         );
+        
+        this.background.img_list.self.img.src = this.background.img_list.self.src;
 
 
-        this.background.img.src = this.background.url;
-
-
+        this.ImgLoadLoop( this.background.img_list );
     }
 
     Ref = ()=>{
 
         try{
 
+        
             this.Draw({
-                img:this.background.img,
-                img_error:this.background.img_error,
+                img:this.background.img_list.self.img,
+                img_error:this.background.img_list.self.img_error,
                 x:0,
                 y:0,
                 w:this.c.width,
                 h:this.c.height,
                 c:this.config.info.background.color
             });
+            
 
 
 
@@ -154,6 +156,13 @@ class CanvasClass{
                 this.HpShow(player);
             }
 
+            
+            for(var key in this.other_back)
+            {
+                this.Draw( this.other_back[key] );
+            }
+
+
             this.anima_timer = requestAnimationFrame(this.Ref);
 
         }catch(e){
@@ -161,8 +170,8 @@ class CanvasClass{
 
             return;
         }
-        
     }
+
 
 
     HpShow = (obj)=>{
@@ -290,6 +299,24 @@ class CanvasClass{
             func();
 
         });
+    }
+
+    ImgLoadLoop = (img_list)=>{
+
+        for(let k in img_list){
+
+            img_list[k].img = new Image();
+
+            this.ImgLoad(img_list[k].img,
+                ()=>{
+                    img_list[k].img_error = false;
+                },
+                ()=>{
+                    img_list[k].img_error = true;
+                }
+            );
+            img_list[k].img.src = img_list[k].src;
+        }
     }
 
     

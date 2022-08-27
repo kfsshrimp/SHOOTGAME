@@ -7,36 +7,7 @@ class EditClass {
             ControlDirSet:null,
             mousedown:{}
         };
-
-        this.unit_row = {
-            img_list:{
-                self:{
-                    src:"img_self"
-                },
-                bullet:{
-                    src:"img_bullet"
-                }
-            },
-            bullet:{
-                hp:"bullet_hp",
-                w:"bullet_w",
-                h:"bullet_h",
-                speed:"bullet_speed",
-            },
-            w:"w",
-            h:"h",
-            hp:"hp",
-            speed:"speed",
-            speed_shoot:"speed_shoot",
-            control:{
-                up:"up",
-                down:"down",
-                right:"right",
-                left:"left"
-            },
-
-        }
-
+        var url_params = new URL(location.href).searchParams;
 
 
         var ControlMenu = document.createElement("div");
@@ -53,9 +24,9 @@ class EditClass {
 
         document.addEventListener("mousedown",this.DragendRegister);
 
+        
 
-
-        if(Ex.flag.Storage.local.stage!==undefined)
+        if(Ex.flag.Storage.local.stage!==undefined && url_params.get("stage")===null)
         {
             this.SaveLoad({
                 mode:"load",
@@ -65,11 +36,11 @@ class EditClass {
 
 
 
-        if(new URL(location.href).searchParams.get("stage")!==null)
+        if(url_params.get("stage")!==null)
         {
             this.SaveLoad({
                 mode:"play",
-                stage:new URL(location.href).searchParams.get("stage")
+                stage:url_params.get("stage")
             });
 
             ControlMenu.innerHTML = this.Temp('play');
@@ -115,11 +86,11 @@ class EditClass {
     CreateUnit = (unit)=>{
 
         unit.img_list.self.img = new Image();
-        Ex.canvas.ImgLoad(unit.img_list.self.img,
+        this.ImgLoad(unit.img_list.self.img,
             ()=>{
                 
                 Ex.canvas[unit.type][unit.id] = unit;
-                this.ImgLoadLoop(unit);
+                this.ImgLoadLoop(unit.img_list);
 
                 if(unit.type==="enemy"){
 
@@ -130,7 +101,7 @@ class EditClass {
                         left:"AI_LEFT"
                     }
 
-                    unit.AI = new AIClass(unit.id);
+                    unit.AI = new AIClass(unit);
                 }
                 
             },
@@ -138,7 +109,7 @@ class EditClass {
                 unit.img_list.self.img_error = true;
 
                 Ex.canvas[unit.type][unit.id] = unit;
-                this.ImgLoadLoop(unit);
+                this.ImgLoadLoop(unit.img_list);
 
                 if(unit.type==="enemy"){
 
@@ -149,7 +120,7 @@ class EditClass {
                         left:"AI_LEFT"
                     }
 
-                    unit.AI = new AIClass(unit.id);
+                    unit.AI = new AIClass(unit);
                 }
 
             }
@@ -158,7 +129,7 @@ class EditClass {
         Ex.canvas[unit.type][unit.id] = unit;
         unit.img_list.self.img.src = unit.img_list.self.src;
 
-
+        if(document.querySelector(`[data-event="${unit.type}"]`)!==null)
         document.querySelector(`[data-event="${unit.type}"]`).value = this.config.msg[`Create${unit.type}`][1];
 
     }
@@ -202,6 +173,14 @@ class EditClass {
                     if(document.querySelector("canvas")!==null)
                     {
                         Ex.canvas.background.grid = parseInt(form.querySelector("#grid").value);
+
+                        Ex.canvas.background.next_stage = (form.querySelector("#next_stage").value);
+
+                        Ex.canvas.background.img_list.game_pass.src = (form.querySelector("#game_pass").value);
+                        Ex.canvas.background.img_list.game_over.src = (form.querySelector("#game_over").value);
+
+
+                        form.remove();
                         
                     }
                     else
@@ -210,10 +189,21 @@ class EditClass {
                         Ex.canvas = new CanvasClass({
         
                             background:{
-                                url:form.querySelector("#url").value,
+                                img_list:{
+                                    self:{
+                                        src:form.querySelector("#url").value
+                                    },
+                                    game_pass:{
+                                        src:form.querySelector("#game_pass").value
+                                    },
+                                    game_over:{
+                                        src:form.querySelector("#game_over").value
+                                    },
+                                },
                                 height:parseInt(form.querySelector("#height").value),
                                 width:parseInt(form.querySelector("#width").value),
-                                grid:parseInt(form.querySelector("#grid").value)
+                                grid:parseInt(form.querySelector("#grid").value),
+                                next_stage:form.querySelector("#next_stage").value
                             },
                             config:this.config
                         });
@@ -246,8 +236,14 @@ class EditClass {
                     var form = div;
 
                     form.querySelector("#grid").value = Ex.canvas.background.grid;
+                    form.querySelector("#next_stage").value = Ex.canvas.background.next_stage;
 
-                    form.querySelector("#url").value = Ex.canvas.background.url;
+
+                    form.querySelector("#game_pass").value = Ex.canvas.background.img_list.game_pass.src;
+                    form.querySelector("#game_over").value = Ex.canvas.background.img_list.game_over.src;
+                    form.querySelector("#url").value = Ex.canvas.background.img_list.self.src;
+
+
                     form.querySelector("#height").value = Ex.canvas.background.height;
                     form.querySelector("#width").value = Ex.canvas.background.width;
 
@@ -280,20 +276,6 @@ class EditClass {
                     }
                 }
 
-
-                if(Ex.canvas[ _event ][ _event ]!==undefined)
-                {
-                    /*
-                    //alert(this.config.msg[`${_event}_exist`]);
-                    if(confirm(this.config.msg.delete_unit)===false) return;
-
-                    delete Ex.canvas[ _event ][ _event ];
-
-                    document.querySelector(`[data-event="${_event}"]`).value = this.config.msg[`Create${_event}`][0];
-
-                    return;
-                    */
-                }
 
                 if(document.querySelector(`#CreateForm${_event}`)!==null)
                 {
@@ -340,13 +322,17 @@ class EditClass {
                         unit.x = Ex.canvas[ _event ][ _event ].x;
                         unit.y = Ex.canvas[ _event ][ _event ].y;
 
-                        console.log(unit);
-
                         unit.img_list = Ex.canvas[ _event ][ _event ].img_list;
 
-                        if(unit.type==="enemy") unit.AI = Ex.canvas[ _event ][ _event ].AI;
+                        if(unit.type==="enemy")
+                        {
+                            cancelAnimationFrame(Ex.canvas[ _event ][ _event ].AI.anima_timer);
+                            unit.AI = new AIClass(unit);
+                        }
 
                         Ex.canvas[ _event ][ _event ] = unit;
+
+                        form.remove();
                     }
                     else
                     {
@@ -366,7 +352,18 @@ class EditClass {
                 div.id = `CreateForm${_event}`;
                 this.DragendRegister(div);
 
+                
+
                 div.innerHTML = this.Temp( _event );
+
+                if(Ex.canvas[ _event ][ _event ]!==undefined)
+                {
+                    div.dataset.unit_type = _event;
+                    div.dataset.unit_id = _event;
+                    div.innerHTML += this.Temp(`delete_unit`);
+                }
+
+
 
                 this.ControlMenu.appendChild(div);
 
@@ -413,6 +410,24 @@ class EditClass {
                 }
                 
             break;
+
+            case "delete_unit":
+                
+                if(confirm(this.config.msg.delete_unit)===false) return;
+
+                var parent = e.target.parentElement;
+
+                delete Ex.canvas[parent.dataset.unit_type][parent.dataset.unit_id];
+
+
+                document.querySelector(`[data-event="${parent.dataset.unit_type}"]`).value = this.config.msg[`Create${parent.dataset.unit_type}`][0];
+
+                
+                parent.remove();
+
+            break;
+
+
 
             
             case "SaveOnline":
@@ -522,6 +537,49 @@ class EditClass {
                 e.target.nextElementSibling.innerHTML += ' (按任意鍵設定)'
             break;
 
+            case "NextStage":
+
+                console.log(Ex.canvas.background.next_stage);
+
+
+                location.href = `${location.pathname}?stage=${Ex.canvas.background.next_stage}`;
+
+            break;
+
+            case "GameRestart":
+
+                Ex.flag.game_start = true;
+
+                for(var name in Ex.canvas.player_bk) Ex.canvas.player[name] = Ex.canvas.player_bk[name];
+                for(var name in Ex.canvas.enemy_bk) Ex.canvas.enemy[name] = Ex.canvas.enemy_bk[name];
+
+                for(var name in Ex.canvas.player)
+                {
+                    Ex.canvas.player[name].hp = Ex.canvas.player[name]._hp;
+                    Ex.canvas.player[name].x = Math.floor(Ex.canvas.c.width/10);
+                    Ex.canvas.player[name].y = Math.floor(Ex.canvas.c.height/2);
+                    Ex.canvas.player[name]._x = Math.floor(Ex.canvas.c.width/10);
+                    Ex.canvas.player[name]._y = Math.floor(Ex.canvas.c.height/2);
+                }
+
+                for(var name in Ex.canvas.enemy)
+                {
+                    Ex.canvas.enemy[name].hp = Ex.canvas.enemy[name]._hp;
+                    Ex.canvas.enemy[name].x = Ex.canvas.c.width - Math.floor(Ex.canvas.c.width/8);
+                    Ex.canvas.enemy[name].y = Math.floor(Ex.canvas.c.height/2);
+                    Ex.canvas.enemy[name]._x = Ex.canvas.c.width - Math.floor(Ex.canvas.c.width/8);
+                    Ex.canvas.enemy[name]._y = Math.floor(Ex.canvas.c.height/2);
+                }
+
+                Ex.canvas.bullet = {};
+                Ex.canvas.other_back = {};
+
+
+
+                if(document.querySelector("#CreateFormPlayMenu")!==null)
+                    document.querySelector("#CreateFormPlayMenu").remove();
+
+            break;
 
             case "GamePause":
 
@@ -573,6 +631,7 @@ class EditClass {
         this.config.info.background.wall.color = color.substr(0,color.length-1) + opacity;
 
 
+        if(document.querySelector(`[data-event="WallColor"]`)!==null)
         document.querySelector(`[data-event="WallColor"]`).value = this.config.msg.wall_color[(opacity==="F")?0:1];
 
     }
@@ -605,7 +664,7 @@ class EditClass {
             });
         }
 
-        if(arg.mod==="play" && arg.stage!==null)
+        if(arg.mode==="play" && arg.stage!==null)
         {
             Ex.DB.ref(`act_game/${arg.stage}`).once("value",r=>{
 
@@ -618,7 +677,63 @@ class EditClass {
     }
 
 
-    GamePause = (pause)=>{
+    GameCheck = ()=>{
+
+        if(Ex.flag.game_start===false) return;
+
+
+        if( Object.keys(Ex.canvas.player).length===0 || Object.keys(Ex.canvas.enemy).length===0)
+        {
+            console.log("GAME OVER");
+
+            Ex.flag.game_start = false;
+            //cancelAnimationFrame(Ex.anima_timer);
+            //cancelAnimationFrame(Ex.canvas.anima_timer);
+
+            var div = document.createElement("div");
+            div.id = `CreateFormPlayMenu`;
+            this.DragendRegister(div);
+
+
+            var game_status = (Object.keys(Ex.canvas.player).length===0)?"game_over":"game_pass";
+
+            div.innerHTML = this.Temp(game_status);
+
+            this.ControlMenu.appendChild(div);
+
+          
+            var img = Ex.canvas.background.img_list[game_status].img;
+            var img_error = Ex.canvas.background.img_list[game_status].img_error;
+           
+            /*
+            Ex.canvas.Draw({
+                img:img,
+                img_error:img_error,
+                x:0,
+                y:0,
+                w:img.width||Ex.canvas.c.width,
+                h:img.height||Ex.canvas.c.height,
+                c:this.config.info.background[game_status].color
+            });*/
+            
+            Ex.canvas.other_back[game_status] = {
+                img:img,
+                img_error:img_error,
+                x:0,
+                y:0,
+                w:img.width||Ex.canvas.c.width,
+                h:img.height||Ex.canvas.c.height,
+                c:this.config.info.background[game_status].color
+            }
+
+            return;
+        }
+
+    }
+
+
+
+    GamePause = ()=>{
         
 
         if(Ex.canvas.c===undefined)
@@ -627,54 +742,28 @@ class EditClass {
         }
 
         var btn = document.querySelector(`[data-event="GamePause"]`);
-        btn.value = (btn.value===this.config.msg.game_pause[0])?this.config.msg.game_pause[1]:this.config.msg.game_pause[0];
-
-        if(
-            (Ex.anima_timer===undefined || Ex.canvas.anima_timer===undefined) && 
-            pause===undefined )
+        if(Ex.flag.game_start)
         {
-            Ex.Ref();
-            Ex.canvas.Ref();
+            btn.value = this.config.msg.game_pause[1];
 
-            for(var name in Ex.canvas.enemy)
-            {
-                Ex.canvas.enemy[name].AI.Ref();
-            }
+            var div = document.createElement("div");
+            div.id = `CreateFormPlayMenu`;
+            this.DragendRegister(div);
 
-            btn.value = this.config.msg.game_pause[0];
-            return;
+            div.innerHTML = this.Temp( 'play_menu' );
+
+            this.ControlMenu.appendChild(div);
+            
         }
         else
         {
-            btn.value = this.config.msg.game_pause[1];
+            btn.value = this.config.msg.game_pause[0];
+
+            if(document.querySelector("#CreateFormPlayMenu")!==null)
+                document.querySelector("#CreateFormPlayMenu").remove();
         }
 
-
-
-        cancelAnimationFrame(Ex.anima_timer);
-        cancelAnimationFrame(Ex.canvas.anima_timer);
-
-        delete Ex.anima_timer;
-        delete Ex.canvas.anima_timer;
-
-        for(var name in Ex.canvas.enemy)
-        {
-            cancelAnimationFrame(Ex.canvas.enemy[name].AI.anima_timer);
-            delete Ex.canvas.enemy[name].AI.anima_timer;
-        }
-    
-
-
-
-        for(var k in Ex.config.font.c2d) Ex.canvas.c2d[k] = Ex.config.font.c2d[k];
-
-        Ex.canvas.c2d.x = Math.floor(Ex.canvas.c.width/2);
-        Ex.canvas.c2d.y = Math.floor(Ex.canvas.c.height/2);
-
-        Ex.canvas.c2d.strokeText('pause',Ex.canvas.c2d.x,Ex.canvas.c2d.y);
-        Ex.canvas.c2d.fillText('pause',Ex.canvas.c2d.x,Ex.canvas.c2d.y);
-
-        
+        Ex.flag.game_start = !Ex.flag.game_start;
 
     }
 
@@ -703,8 +792,6 @@ class EditClass {
         for(let name in db_json.enemy)
         {
             this.CreateUnit(db_json.enemy[name]);
-            
-            db_json.enemy[name].AI = new AIClass(db_json.enemy[name].id);
             
         }
     }
@@ -736,10 +823,7 @@ class EditClass {
 
         for(let name in db_json.enemy)
         {
-            this.CreateUnit(db_json.enemy[name]);
-            
-            db_json.enemy[name].AI = new AIClass(db_json.enemy[name].id);
-            
+            this.CreateUnit(db_json.enemy[name]);            
         }
 
         Ex.canvas.c.addEventListener("mousedown",this.MouseDown);
@@ -780,8 +864,6 @@ class EditClass {
                 {
                     this.CreateUnit(json.enemy[name]);
                     
-                    json.enemy[name].AI = new AIClass(json.enemy[name].id);
-                    
                 }
         
                 Ex.canvas.c.addEventListener("mousedown",this.MouseDown);
@@ -797,26 +879,23 @@ class EditClass {
 
 
 
-    ImgLoadLoop = (unit)=>{
+    ImgLoadLoop = (img_list)=>{
 
-        for(let k in unit.img_list){
+        for(let k in img_list){
 
-            unit.img_list[k].img = new Image();
+            img_list[k].img = new Image();
 
-            this.ImgLoad(unit.img_list[k].img,
+            this.ImgLoad(img_list[k].img,
                 ()=>{
-                    
-                    Ex.canvas[unit.type][unit.id].img_list[k].img = unit.img_list[k].img;
-
+                    img_list[k].img_error = false;
                 },
                 ()=>{
-                    Ex.canvas[unit.type][unit.id].img_list[k].img_error = true;
+                    img_list[k].img_error = true;
 
                 }
             );
-            unit.img_list[k].img.src = unit.img_list[k].src;
+            img_list[k].img.src = img_list[k].src;
         }
-
     }
 
 
@@ -873,8 +952,45 @@ class EditClass {
 
             break;
 
+
+            case "game_over":
+
+                html = `
+                    <input type="button" data-event="GameRestart" value="重新開始">
+                `;
+
+            break;
+
+
+            case "game_pass":
+
+                html = `
+                    <input type="button" data-event="GameRestart" value="重新開始">
+                    <input type="button" data-event="NextStage" value="前進下一關">
+                `;
+
+            break;
+
+
+            case "play_menu":
+
+                html = `
+                
+                <input type="button" data-event="GameRestart" value="重新開始">
+                <input type="button" data-event="GamePause" value="${Ex.config.msg.game_pause[1]}">
+            
+            `;
+
+            break;
+
+
+
+
             case "default":
                 html = `
+
+                    <span style="color:#fff;">關卡網址：</span><input type="text" style="width:80%" value="${location.href}?stage=${Ex.flag.Storage.local.stage}">
+                    <HR>
 
 
                     <input type="button" data-event="GamePause" value="${Ex.config.msg.game_pause[0]}">
@@ -917,10 +1033,19 @@ class EditClass {
 
                     地圖方格大小：<input type="number" id="grid" value="${this.config.info.background.wall.grid}"><BR>
 
+                    過關畫面網址：<input type="text" id="game_pass" value=""><BR>
+
+                    失敗畫面網址：<input type="text" id="game_over" value=""><BR>
+
+                    下一關編號：<input type="text" id="next_stage" value=""><BR>
+
                     
                     高：<input id="height" type="number" value="${this.config.info.background.h}"><BR>
                     寬：<input id="width" type="number" value="${this.config.info.background.w}"><BR>
 
+                    <HR>
+                    <input type="button" data-event="${name}" value="送出">
+                    <input type="button" data-event="CloseParent" value="取消">
                 `;
 
             break;
@@ -964,18 +1089,24 @@ class EditClass {
                         data-event="ControlDirSet" type="button">：<span>${this.config.info[name].control.left}</span><BR>
 
                     </div>
+
+                    <HR>
+                    <input type="button" data-event="${name}" value="送出">
+                    <input type="button" data-event="CloseParent" value="取消">
                 `;
             break;
-        }
 
-        if(name!=="default" && name!=="play"){
+            case "delete_unit":
 
-            html += `
-                <HR>
-                <input type="button" data-event="${name}" value="送出">
-                <input type="button" data-event="CloseParent" value="取消">
-            `;
+                html = `
+                
+                    <input type="button" data-event="delete_unit" value="刪除單位">
+                `;
+
+            break;
+
             
+
         }
 
 

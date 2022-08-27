@@ -1,6 +1,6 @@
 class AIClass{
 
-    constructor(id){
+    constructor(enemy){
 
         this.up = ()=>{ 
             Ex.flag.key[ "AI_UP" ] = true;
@@ -19,7 +19,7 @@ class AIClass{
             Ex.flag.key[ "AI_RIGHT" ] = false;
         }
 
-        this.enemy_id = id;
+        this.enemy = enemy;
         this.timer = 1;
         this.opt = {};
 
@@ -29,17 +29,16 @@ class AIClass{
 
     Ref = ()=>{
         try{
-            
-            this.EnemyControl();
-
 
             if(Ex.flag.game_start)
             {
+                this.EnemyControl();
+
                 this.AI_Shoot();
 
                 this.AI_Move();
-
             }
+            
 
             this.anima_timer = requestAnimationFrame(this.Ref);
 
@@ -51,17 +50,16 @@ class AIClass{
 
     AI_Move = ()=>{
 
-        Ex.canvas.enemy[this.enemy_id].move_last_time = Ex.canvas.enemy[this.enemy_id].move_last_time||new Date().getTime();
+        this.enemy.move_last_time = this.enemy.move_last_time||new Date().getTime();
 
-        if(new Date().getTime() - Ex.canvas.enemy[this.enemy_id].move_last_time < 500)
+        if(new Date().getTime() - this.enemy.move_last_time < 500)
         {
             return;
         }
 
-        Ex.canvas.enemy[this.enemy_id].move_last_time = new Date().getTime();
+        this.enemy.move_last_time = new Date().getTime();
 
        
-
 
         Ex.flag.key[ "AI_UP" ] = false;
         Ex.flag.key[ "AI_DOWN" ] = false;
@@ -70,16 +68,16 @@ class AIClass{
 
         var ary = ["up","down","right","left"];
 
-        if(Ex.canvas.enemy[this.enemy_id].x>Math.floor(Ex.canvas.c.width*0.8)) 
+        if(this.enemy.x>Math.floor(Ex.canvas.c.width*0.8)) 
             ary.forEach( (v,k)=>{if(v==="right") ary.splice(k,1)});
 
-        if(Ex.canvas.enemy[this.enemy_id].x<Math.floor(Ex.canvas.c.width*0.2)) 
+        if(this.enemy.x<Math.floor(Ex.canvas.c.width*0.2)) 
             ary.forEach( (v,k)=>{if(v==="left") ary.splice(k,1)});
 
-        if(Ex.canvas.enemy[this.enemy_id].y>Math.floor(Ex.canvas.c.height*0.8)) 
+        if(this.enemy.y>Math.floor(Ex.canvas.c.height*0.8)) 
             ary.forEach( (v,k)=>{if(v==="down") ary.splice(k,1)});
 
-        if(Ex.canvas.enemy[this.enemy_id].y<Math.floor(Ex.canvas.c.height*0.2)) 
+        if(this.enemy.y<Math.floor(Ex.canvas.c.height*0.2)) 
             ary.forEach( (v,k)=>{if(v==="up") ary.splice(k,1)});
 
             
@@ -107,7 +105,7 @@ class AIClass{
         }
         
         
-        Ex.func.EnemyShoot(Ex.canvas.enemy[this.enemy_id],x,y);
+        Ex.func.EnemyShoot(this.enemy,x,y);
     }
 
 
