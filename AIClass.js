@@ -32,9 +32,7 @@ class AIClass{
 
             if(Ex.flag.game_start)
             {
-                this.EnemyControl();
-
-                this.AI_Shoot();
+                Ex.func.UnitControl('enemy');
 
                 this.AI_Move();
             }
@@ -93,118 +91,10 @@ class AIClass{
         
     }
 
+   
+   
 
-    AI_Shoot = ()=>{
-
-        var x = 0,y = Math.floor(Ex.canvas.c.height/2);
-        
-        for(var name in Ex.canvas.player)
-        {
-            x = Ex.canvas.player[name].x;
-            y = Ex.canvas.player[name].y;
-        }
-        
-        
-        Ex.func.EnemyShoot(this.enemy,x,y);
-    }
-
-
-    EnemyControl = ()=>{
-
-        for(var name in Ex.canvas.enemy)
-        {
-            var obj = Ex.canvas.enemy[name];
-            var control = obj.control;
-            
-            obj._x = obj._x||obj.x;
-            obj._y = obj._y||obj.y;
-
-            obj._speed = obj._speed||obj.speed;
-
-            if(Ex.flag.key[control.left])obj._x-=parseFloat(obj.speed);
-            if(Ex.flag.key[control.right])obj._x+=parseFloat(obj.speed);
-            if(Ex.flag.key[control.up])obj._y-=parseFloat(obj.speed);
-            if(Ex.flag.key[control.down])obj._y+=parseFloat(obj.speed);
-
-            if(Ex.flag.key[control.left] || 
-            Ex.flag.key[control.right] ||
-            Ex.flag.key[control.up] || 
-            Ex.flag.key[control.down])
-            {
-
-                if(this.EnemyCollision(obj)!==false)
-                {
-                    obj._x = obj.x;
-                    obj._y = obj.y;
-                    
-                    obj.speed-=1;
-                }
-                else
-                {
-                    obj.x = parseInt(obj._x);
-                    obj.y = parseInt(obj._y);
-                    
-                    obj.speed = obj._speed;
-                }
-
-            }
-        }
-    }
-
-    EnemyCollision = (obj)=>{
-
-        var _r = false;
-
-        if(
-            (
-                obj._x<=0 || obj._x+obj.w>=Ex.canvas.c.width || 
-                obj._y<=0 || obj._y+obj.h>=Ex.canvas.c.height
-            )
-        ) _r = true;
-
-
-        Object.values(Ex.canvas.player).forEach(hit_obj=>{
-
-            if(
-                obj._x       <= hit_obj.x+hit_obj.w && 
-                obj._y       <= hit_obj.y+hit_obj.h && 
-                obj._x+obj.w >= hit_obj.x && 
-                obj._y+obj.h >= hit_obj.y 
-            ) 
-            _r = hit_obj;
-
-        });
-
-        Object.values(Ex.canvas.wall).forEach(hit_obj=>{
-
-            
-            if(
-                obj._x       <= hit_obj.x+hit_obj.w && 
-                obj._y       <= hit_obj.y+hit_obj.h && 
-                obj._x+obj.w >= hit_obj.x && 
-                obj._y+obj.h >= hit_obj.y 
-            ) 
-            _r = hit_obj;
-
-        });
-
-        Object.values(Ex.canvas.bullet).forEach(hit_obj=>{
-
-            if(hit_obj.unit.id===obj.id) return;
-            
-            if(
-                obj._x       <= hit_obj.x+hit_obj.w && 
-                obj._y       <= hit_obj.y+hit_obj.h && 
-                obj._x+obj.w >= hit_obj.x && 
-                obj._y+obj.h >= hit_obj.y 
-            ) 
-            _r = hit_obj;
-
-        });
-
-        return _r;
-
-    }
+ 
 
 
 

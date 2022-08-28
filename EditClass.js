@@ -292,12 +292,15 @@ class EditClass {
                             }
                         },
                         bullet:{
-                            hp:parseInt(form.querySelector("#bullet_hp").value),
-                            w:parseInt(form.querySelector("#bullet_w").value),
-                            h:parseInt(form.querySelector("#bullet_h").value),
-                            speed:parseInt(form.querySelector("#bullet_speed").value),
+                            mode:form.querySelector("#bullet_mode").value,
+                            hp:parseFloat(form.querySelector("#bullet_hp").value),
+                            w:parseFloat(form.querySelector("#bullet_w").value),
+                            h:parseFloat(form.querySelector("#bullet_h").value),
+                            speed:parseFloat(form.querySelector("#bullet_speed").value),
+                            rand:parseFloat(form.querySelector("#bullet_rand").value),
+
                             count:parseInt(form.querySelector("#bullet_count").value),
-                            rand:parseInt(form.querySelector("#bullet_rand").value),
+                            reflex_count:parseInt(form.querySelector("#reflex_count").value),
 
                         },
                         x: ary.x[ _event ] ,
@@ -306,8 +309,8 @@ class EditClass {
                         h:parseInt(form.querySelector("#h").value),
                         lv:1,
                         hp:parseInt(form.querySelector("#hp").value),
-                        speed:parseInt(form.querySelector("#speed").value),
-                        speed_shoot:parseInt(form.querySelector("#speed_shoot").value),
+                        speed:parseFloat(form.querySelector("#speed").value),
+                        speed_shoot:parseFloat(form.querySelector("#speed_shoot").value),
                         control:{
                             up:form.querySelector("#up").dataset.value.toString().toUpperCase(),
                             down:form.querySelector("#down").dataset.value.toString().toUpperCase(),
@@ -315,6 +318,7 @@ class EditClass {
                             left:form.querySelector("#left").dataset.value.toString().toUpperCase()
                         }
                     };
+
 
 
                     if(Ex.canvas[ _event ][ _event ]!==undefined)
@@ -380,6 +384,8 @@ class EditClass {
                     form.querySelector("#img_bullet").setAttribute("disabled","disabled");
 
 
+                    
+                    form.querySelector("#bullet_mode").value = unit.bullet.mode;
                     form.querySelector("#bullet_hp").value = unit.bullet.hp;
                     form.querySelector("#bullet_w").value = unit.bullet.w;
                     form.querySelector("#bullet_h").value = unit.bullet.h;
@@ -387,6 +393,7 @@ class EditClass {
                     form.querySelector("#bullet_hp").value = unit.bullet.hp;
                     form.querySelector("#bullet_count").value = unit.bullet.count;
                     form.querySelector("#bullet_rand").value = unit.bullet.rand;
+                    form.querySelector("#reflex_count").value = unit.bullet.reflex_count;
 
                     form.querySelector("#w").value = unit.w;
                     form.querySelector("#h").value = unit.h;
@@ -548,7 +555,9 @@ class EditClass {
 
             case "GameRestart":
 
-                Ex.flag.game_start = true;
+                Ex.flag.game_start = false;
+
+                document.querySelector(`[data-event="GameStart"]`).removeAttribute("disabled");
 
                 for(var name in Ex.canvas.player_bk) Ex.canvas.player[name] = Ex.canvas.player_bk[name];
                 for(var name in Ex.canvas.enemy_bk) Ex.canvas.enemy[name] = Ex.canvas.enemy_bk[name];
@@ -989,7 +998,7 @@ class EditClass {
             case "default":
                 html = `
 
-                    <span style="color:#fff;">關卡網址：</span><input type="text" style="width:80%" value="${location.href}?stage=${Ex.flag.Storage.local.stage}">
+                    <span style="color:#fff;">關卡網址：</span><input type="text" style="width:80%" value="${location.href}?stage=${Ex.flag.Storage.local.stage||''}">
                     <HR>
 
 
@@ -1055,7 +1064,7 @@ class EditClass {
             case "enemy":
                 html =`
                     單位圖片網址：<input type="text" id="img_self" value="${this.config.info[name].src}"><BR>
-                    子彈圖片網址：<input type="text" id="img_bullet" value="${this.config.info[name].bullet.src}"><BR>
+                    
 
                     血量：<input type="number" id="hp" value="${this.config.info[name].hp.v}"><BR>
                     移動速度<input type="number" id="speed" value="${this.config.info[name].speed}"><BR>
@@ -1064,9 +1073,13 @@ class EditClass {
                     高：<input id="h" type="number" value="${this.config.info[name].h}"><BR>
                     寬：<input id="w" type="number" value="${this.config.info[name].w}"><BR>
 
+                    <HR>
 
-                    子彈攻擊力<input type="number" id="bullet_hp" value="${this.config.info[name].bullet.hp}"><BR>
-                    子彈速度<input type="number" id="bullet_speed" value="${this.config.info[name].bullet.speed}"><BR>
+                    子彈圖片網址：<input type="text" id="img_bullet" value="${this.config.info[name].bullet.src}"><BR>
+
+                    子彈類型：<select id="bullet_mode">${this.Temp(`bullet_mode_${name}`)}</select><BR>
+                    子彈攻擊力：<input type="number" id="bullet_hp" value="${this.config.info[name].bullet.hp}"><BR>
+                    子彈速度：<input type="number" id="bullet_speed" value="${this.config.info[name].bullet.speed}"><BR>
 
                     子彈高：<input id="bullet_h" type="number" value="${this.config.info[name].bullet.h}"><BR>
                     子彈寬：<input id="bullet_w" type="number" value="${this.config.info[name].bullet.w}"><BR>
@@ -1074,6 +1087,8 @@ class EditClass {
                     子彈數量：<input id="bullet_count" type="number" value="${this.config.info[name].bullet.count}"><BR>
 
                     彈道飄移倍率：<input id="bullet_rand" type="number" value="${this.config.info[name].bullet.rand}"><BR>
+
+                    反彈子彈反彈次數：<input id="reflex_count" type="number" value="${this.config.info[name].bullet.reflex_count}"><BR>
 
                     <div ${(name==="enemy")?`style="display:none"`:""}>
                         <input id="up" data-value="${this.config.info[name].control.up}" value="上" 
@@ -1102,6 +1117,18 @@ class EditClass {
                 
                     <input type="button" data-event="delete_unit" value="刪除單位">
                 `;
+
+            break;
+
+
+            case "bullet_mode_player":
+            case "bullet_mode_enemy":
+
+                for(var key in this.config.info[name.split("_").pop()].bullet.mode)
+                {
+                    var text = this.config.info[name.split("_").pop()].bullet.mode[key];
+                    html += `<option value="${key}">${text}</option>`;
+                }
 
             break;
 

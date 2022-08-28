@@ -64,7 +64,12 @@ class ConfigClass{
                     hp:5,
                     speed:5,
                     count:1,
-                    rand:2
+                    rand:2,
+                    reflex_count:0,
+                    mode:{
+                        normal:"普通",
+                        reflex:"反彈"
+                    }
                 },
                 hp:{
                     color:["#000f","#0f0f"],
@@ -90,11 +95,16 @@ class ConfigClass{
                     src:"https://avatars.plurk.com/14556765-big9788529.jpg",
                     w:20,
                     h:20,
-                    color:"#f00",
+                    color:"#0ff",
                     hp:5,
                     speed:5,
                     count:1,
-                    rand:2
+                    rand:2,
+                    reflex_count:0,
+                    mode:{
+                        normal:"普通",
+                        reflex:"反彈"
+                    }
                 },
                 hp:{
                     color:["#000f","#0f0f"],

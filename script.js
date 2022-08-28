@@ -1,6 +1,6 @@
 (()=>{
     Ex = {
-        id:"act_game",
+        id:"SHOOTGAME",
         config:{},
         anima_timer:{},
         flag:{
@@ -87,10 +87,99 @@
             },
             KeyEvent:()=>{
 
-                Ex.func.PlayerControl();
+                Ex.func.UnitControl('player');
                 
             },
-            BulletShoot:()=>{
+            BulletReflex:(obj,wall)=>{
+
+                if(obj.reflex<0)
+                {
+                    delete Ex.canvas.bullet[obj.id];
+                    return;
+                }
+
+                var max_w = Ex.canvas.c.width,
+                    min_w = 0,
+                    max_h = Ex.canvas.c.height,
+                    min_h = 0;
+
+
+
+                if(wall!==undefined)
+                {
+                    if(obj.x_d===-1) obj.ox = obj.x2-1;
+                    if(obj.x_d===1) obj.ox = obj.x2+1;
+
+                    if(obj.y_d===-1) obj.oy = obj.y2-1;
+                    if(obj.y_d===1) obj.oy = obj.y2+1;
+                    
+
+                    obj.reflex-=1;
+
+                    return;
+                }
+
+
+                if(obj._x+obj.w>=max_w){
+                    obj.ox = obj.x2+1;
+                    if(obj.y_d===1)
+                    {
+                        obj.oy = obj.y2-1; 
+                    }
+                    else if(obj.y_d===-1)
+                    {
+                        obj.oy = obj.y2+1;
+                    }
+                }
+                if(obj._y+obj.h>=max_h)
+                {
+                    obj.oy = obj.y2+1;
+                    if(obj.x_d===1)
+                    {
+                        obj.ox = obj.x2-1; 
+                    }
+                    else if(obj.x_d===-1)
+                    {
+                        obj.ox = obj.x2+1;
+                    }
+                }
+
+                if(obj._x<=min_w)
+                {
+                    obj.ox = obj.x2-1;
+                    if(obj.y_d===1)
+                    {
+                        obj.oy = obj.y2-1; 
+                    }
+                    else if(obj.y_d===-1)
+                    {
+                        obj.oy = obj.y2+1;
+                    }
+                }
+                if(obj._y<=min_h)
+                {
+                    obj.oy = obj.y2-1;
+                    if(obj.x_d===1)
+                    {
+                        obj.ox = obj.x2-1; 
+                    }
+                    else if(obj.x_d===-1)
+                    {
+                        obj.ox = obj.x2+1;
+                    }
+                }
+
+
+
+                if(obj._x+obj.w>=max_w || 
+                obj._y+obj.h>=max_h || 
+                obj._x<=min_w ||
+                obj._y<=min_h) obj.reflex-=1;
+                
+
+
+            },
+            BulletMove:()=>{
 
 
                 for(let i in Ex.canvas.bullet)
@@ -130,6 +219,14 @@
 
                     if( hit_obj!==false )
                     {
+                        if(hit_obj.type==="wall" && obj.mode==="reflex")
+                        {
+                            Ex.func.BulletReflex(obj,hit_obj);
+                            
+                            continue;
+                        }
+
+
                         if(hit_obj.hp>obj.hp)
                         {
                             hit_obj.hp-=obj.hp;
@@ -177,6 +274,12 @@
                         obj.y = parseInt(obj._y);
     
                         obj.speed = obj._speed;
+
+
+                        if(obj.mode==="reflex")
+                        {
+                            Ex.func.BulletReflex(obj);
+                        }
                     }
 
 
@@ -191,11 +294,12 @@
                 }
 
             },
-            PlayerControl:()=>{
+            UnitControl:(type)=>{
 
-                for(var name in Ex.canvas.player)
+
+                for(var name in Ex.canvas[type])
                 {
-                    let obj = Ex.canvas.player[name];
+                    let obj = Ex.canvas[type][name];
                     let control = obj.control;
                     
                     obj._x = obj._x||obj.x;
@@ -214,7 +318,7 @@
                     Ex.flag.key[control.down])
                     {
 
-                        if(Ex.func.PlayerCollision(obj)!==false)
+                        if(Ex.func.UnitCollision(obj)!==false)
                         {
                             obj._x = obj.x;
                             obj._y = obj.y;
@@ -231,116 +335,7 @@
 
                     }
 
-
-                    
-                    Ex.func.PlayerShoot(obj);
-                }
-
-            },
-            EnemyControl:()=>{
-
-                for(let name in Ex.canvas.enemy)
-                {
-                    let obj = Ex.canvas.enemy[name];
-                    let control = obj.control;
-
-                    obj._x = obj._x||obj.x;
-                    obj._y = obj._y||obj.y;
-
-                    obj._speed = obj._speed||obj.speed;
-
-                    if(Ex.flag.key[control.left])obj._x-=parseFloat(obj.speed);
-                    if(Ex.flag.key[control.right])obj._x+=parseFloat(obj.speed);
-                    if(Ex.flag.key[control.up])obj._y-=parseFloat(obj.speed);
-                    if(Ex.flag.key[control.down])obj._y+=parseFloat(obj.speed);
-
-                    if(Ex.flag.key[control.left] || 
-                    Ex.flag.key[control.right] ||
-                    Ex.flag.key[control.up] || 
-                    Ex.flag.key[control.down])
-                    {
-        
-                        if(Ex.func.EnemyCollision(obj)!==false)
-                        {
-                            obj._x = obj.x;
-                            obj._y = obj.y;
-                            
-                            obj.speed-=1;
-                        }
-                        else
-                        {
-                            obj.x = parseInt(obj._x);
-                            obj.y = parseInt(obj._y);
-                            
-                            obj.speed = obj._speed;
-                        }
-        
-                    }
-
-                    var x = 0,y = Math.floor(Ex.canvas.c.height/2);
-        
-                    for(let p_name in Ex.canvas.player)
-                    {
-                        x = Ex.canvas.player[p_name].x;
-                        y = Ex.canvas.player[p_name].y;
-                    }
-                    
-                    Ex.func.EnemyShoot(Ex.canvas.enemy[name],x,y);
-
-
-                }
-            },
-            EnemyAI:()=>{
-                
-
-                for(let name in Ex.canvas.enemy)
-                {
-                    let obj = Ex.canvas.enemy[name];
-                    let control = obj.control;
-
-                    obj.move_last_time = obj.move_last_time||new Date().getTime();
-
-                    if(new Date().getTime() - obj.move_last_time < 500)
-                    {
-                        return;
-                    }
-
-                    obj.move_last_time = new Date().getTime();
-
-                    var ary = [];
-                    for(var key in control){
-                        Ex.flag.key[ control[key] ] = false;
-                        ary.push(key);
-                    }
-                    /*
-                    Ex.flag.key[ "AI_UP" ] = false;
-                    Ex.flag.key[ "AI_DOWN" ] = false;
-                    Ex.flag.key[ "AI_RIGHT" ] = false;
-                    Ex.flag.key[ "AI_LEFT" ] = false;
-                    var ary = ["up","down","right","left"];
-                    */
-
-                    if(obj.x>Math.floor(Ex.canvas.c.width*0.8)) 
-                        ary.forEach( (v,k)=>{if(v==="right") ary.splice(k,1)});
-
-                    if(obj.x<Math.floor(Ex.canvas.c.width*0.2)) 
-                        ary.forEach( (v,k)=>{if(v==="left") ary.splice(k,1)});
-
-                    if(obj.y>Math.floor(Ex.canvas.c.height*0.8)) 
-                        ary.forEach( (v,k)=>{if(v==="down") ary.splice(k,1)});
-
-                    if(obj.y<Math.floor(Ex.canvas.c.height*0.2)) 
-                        ary.forEach( (v,k)=>{if(v==="up") ary.splice(k,1)});
-
-
-                    var move = Ex.func.Rand(ary);
-                    
-                    obj.AI[move]();
-
-                    var move = Ex.func.Rand(ary);
-                    
-                    obj.AI[move]();
-
+                    Ex.func.UnitShoot(obj);
                 }
 
             },
@@ -398,7 +393,7 @@
 
 
             },
-            PlayerCollision:(obj)=>{
+            UnitCollision:(obj)=>{
 
                 var _r = false;
 
@@ -409,8 +404,16 @@
                     )
                 ) _r = true;
 
+                var all_obj = Object.values(Ex.canvas.player).concat(
+                                Object.values(Ex.canvas.enemy)
+                            ).concat( 
+                                Object.values(Ex.canvas.wall)
+                            );
 
-                Object.values(Ex.canvas.enemy).forEach(hit_obj=>{
+
+                all_obj.forEach(hit_obj=>{
+
+                    if(hit_obj.id===obj.id) return;
 
                     if(
                         obj._x       <= hit_obj.x+hit_obj.w && 
@@ -422,90 +425,10 @@
 
                 });
 
-                Object.values(Ex.canvas.wall).forEach(hit_obj=>{
-
-                    
-                    if(
-                        obj._x       <= hit_obj.x+hit_obj.w && 
-                        obj._y       <= hit_obj.y+hit_obj.h && 
-                        obj._x+obj.w >= hit_obj.x && 
-                        obj._y+obj.h >= hit_obj.y 
-                    ) 
-                    _r = hit_obj;
-
-                });
-
-                Object.values(Ex.canvas.bullet).forEach(hit_obj=>{
-
-                    if(hit_obj.unit.id===obj.id) return;
-                    
-                    if(
-                        obj._x       <= hit_obj.x+hit_obj.w && 
-                        obj._y       <= hit_obj.y+hit_obj.h && 
-                        obj._x+obj.w >= hit_obj.x && 
-                        obj._y+obj.h >= hit_obj.y 
-                    ) 
-                    _r = hit_obj;
-
-                });
 
                 return _r;
             },
-            EnemyCollision:(obj)=>{
-
-                var _r = false;
-        
-                if(
-                    (
-                        obj._x<=0 || obj._x+obj.w>=Ex.canvas.c.width || 
-                        obj._y<=0 || obj._y+obj.h>=Ex.canvas.c.height
-                    )
-                ) _r = true;
-        
-        
-                Object.values(Ex.canvas.player).forEach(hit_obj=>{
-        
-                    if(
-                        obj._x       <= hit_obj.x+hit_obj.w && 
-                        obj._y       <= hit_obj.y+hit_obj.h && 
-                        obj._x+obj.w >= hit_obj.x && 
-                        obj._y+obj.h >= hit_obj.y 
-                    ) 
-                    _r = hit_obj;
-        
-                });
-        
-                Object.values(Ex.canvas.wall).forEach(hit_obj=>{
-        
-                    
-                    if(
-                        obj._x       <= hit_obj.x+hit_obj.w && 
-                        obj._y       <= hit_obj.y+hit_obj.h && 
-                        obj._x+obj.w >= hit_obj.x && 
-                        obj._y+obj.h >= hit_obj.y 
-                    ) 
-                    _r = hit_obj;
-        
-                });
-        
-                Object.values(Ex.canvas.bullet).forEach(hit_obj=>{
-        
-                    if(hit_obj.unit.id===obj.id) return;
-                    
-                    if(
-                        obj._x       <= hit_obj.x+hit_obj.w && 
-                        obj._y       <= hit_obj.y+hit_obj.h && 
-                        obj._x+obj.w >= hit_obj.x && 
-                        obj._y+obj.h >= hit_obj.y 
-                    ) 
-                    _r = hit_obj;
-        
-                });
-        
-                return _r;
-        
-            },
-            PlayerShoot:(obj)=>{
+            UnitShoot:(obj)=>{
 
                 var shoot_limit =  1000 * (1-obj.speed_shoot*0.01);
 
@@ -513,56 +436,30 @@
                 {
                     return;
                 }
+                var x,y;
 
-                var x = Ex.flag.mousemove.offsetX||Ex.canvas.c.width;
-                var y = Ex.flag.mousemove.offsetY||Math.floor(Ex.canvas.c.height/2);
-
-                obj.shoot_last_time = new Date().getTime();
-
-                var id = `${obj.id}_${new Date().getTime()}`;
-
-
-                for(let i=0;i<obj.bullet.count;i++)
-                {
-                    let x_r = Ex.func.Rand( Math.floor(obj.bullet.w*obj.bullet.rand) );
-                    let y_r = Ex.func.Rand( Math.floor(obj.bullet.h*obj.bullet.rand) ) ;
-
-                    let plus_minus = Ex.func.Rand( [0,1,-1] );
-
-
-                    Ex.canvas.bullet[ id + i ] = {
-                        id:id + i,
-                        unit:{
-                            id:obj.id,
-                            type:obj.type
-                        },
-                        type:"bullet",
-                        x:obj.x,
-                        y:obj.y,
-                        x2:x + x_r*plus_minus,
-                        y2:y + y_r*plus_minus,
-                        w:obj.bullet.w,
-                        h:obj.bullet.h,
-                        hp:obj.bullet.hp,
-                        speed:obj.bullet.speed
-                    }
-                }
                 
-            },
-            EnemyShoot:(obj,x,y)=>{
-
-
-                var shoot_limit =  1000 * (1-obj.speed_shoot*0.01);
-
-                if(new Date().getTime() - obj.shoot_last_time < shoot_limit )
+                if(obj.type==="player")
                 {
-                    return;
+                    x = Ex.flag.mousemove.offsetX||Ex.canvas.c.width;
+                    y = Ex.flag.mousemove.offsetY||Math.floor(Ex.canvas.c.height/2);
                 }
-
+                else if(obj.type==="enemy")
+                {
+                    x = 0;
+                    y = Math.floor(Ex.canvas.c.height/2);
+        
+                    for(var name in Ex.canvas.player)
+                    {
+                        x = Ex.canvas.player[name].x;
+                        y = Ex.canvas.player[name].y;
+                    }
+                }
 
                 obj.shoot_last_time = new Date().getTime();
 
                 var id = `${obj.id}_${new Date().getTime()}`;
+
 
                 for(let i=0;i<obj.bullet.count;i++)
                 {
@@ -571,6 +468,7 @@
 
                     let plus_minus = Ex.func.Rand( [0,1,-1] );
 
+
                     Ex.canvas.bullet[ id + i ] = {
                         id:id + i,
                         unit:{
@@ -578,6 +476,8 @@
                             type:obj.type
                         },
                         type:"bullet",
+                        mode:obj.bullet.mode,
+                        reflex:obj.bullet.reflex_count,
                         x:obj.x,
                         y:obj.y,
                         x2:x + x_r*plus_minus,
@@ -588,7 +488,6 @@
                         speed:obj.bullet.speed
                     }
                 }
-
 
             },
             Rand:(array)=>{
@@ -653,7 +552,7 @@
                     //Ex.func.EnemyControl();
                     //Ex.func.EnemyAI();
 
-                    Ex.func.BulletShoot();
+                    Ex.func.BulletMove();
                 }
 
                 Ex.anima_timer = requestAnimationFrame(Ex.Ref);
