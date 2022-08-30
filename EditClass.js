@@ -5,6 +5,7 @@ class EditClass {
         
         this.flag = {
             ControlDirSet:null,
+            WallMode:true,
             mousedown:{}
         };
         var url_params = new URL(location.href).searchParams;
@@ -24,9 +25,10 @@ class EditClass {
 
         document.addEventListener("mousedown",this.DragendRegister);
 
-        
 
-        if(Ex.flag.Storage.local.stage!==undefined && url_params.get("stage")===null)
+        if(
+            Ex.flag.Storage.local.stage!==undefined && 
+            url_params.get("stage")===null)
         {
             this.SaveLoad({
                 mode:"load",
@@ -66,21 +68,38 @@ class EditClass {
 
     MouseDown = (e)=>{
 
-
-        var idx = Object.keys(Ex.canvas.wall).length;
-        var id = "wall"+idx;
-
-        Ex.canvas.wall[id] = 
+        if(this.flag.WallMode)
         {
-            id:id,
-            type:"wall",
-            x:e.offsetX - e.offsetX%Ex.canvas.background.grid,
-            y:e.offsetY - e.offsetY%Ex.canvas.background.grid,
-            w:Ex.canvas.background.grid,
-            h:Ex.canvas.background.grid,
-            hp:this.config.info.background.wall.hp,
-            color:this.config.info.background.wall.color
-        };
+            var id = `wall_${new Date().getTime()}`;
+
+            Ex.canvas.wall[id] = 
+            {
+                id:id,
+                type:"wall",
+                x:e.offsetX - e.offsetX%Ex.canvas.background.grid,
+                y:e.offsetY - e.offsetY%Ex.canvas.background.grid,
+                w:Ex.canvas.background.grid,
+                h:Ex.canvas.background.grid,
+                hp:this.config.info.background.wall.hp,
+                color:this.config.info.background.wall.color
+            };
+        }
+        else
+        {
+            for(var id in Ex.canvas.wall)
+            {
+                var obj = Ex.canvas.wall[id];
+
+                if(e.offsetX>obj.x && e.offsetX<obj.x+obj.w &&
+                    e.offsetY>obj.y && e.offsetY<obj.y+obj.h)
+                    {
+                        delete Ex.canvas.wall[id];
+                    }
+
+            }
+
+        }
+        
     }
 
     CreateUnit = (unit)=>{
@@ -143,6 +162,11 @@ class EditClass {
 
             case "ClearStage":
                 if(confirm(this.config.msg.ClearStage)===false) return;
+
+                for(var name in Ex.canvas.enemy)
+                {
+                    cancelAnimationFrame(Ex.canvas.enemy[name].AI.anima_timer);
+                }
 
                 Ex.canvas.c.remove();
                 Ex.canvas = {};
@@ -293,14 +317,18 @@ class EditClass {
                         },
                         bullet:{
                             mode:form.querySelector("#bullet_mode").value,
-                            hp:parseFloat(form.querySelector("#bullet_hp").value),
-                            w:parseFloat(form.querySelector("#bullet_w").value),
-                            h:parseFloat(form.querySelector("#bullet_h").value),
+                            hp:parseInt(form.querySelector("#bullet_hp").value),
+                            w:parseInt(form.querySelector("#bullet_w").value),
+                            h:parseInt(form.querySelector("#bullet_h").value),
+
                             speed:parseFloat(form.querySelector("#bullet_speed").value),
                             rand:parseFloat(form.querySelector("#bullet_rand").value),
+                            track_sec:parseFloat(form.querySelector("#track_sec").value),
 
                             count:parseInt(form.querySelector("#bullet_count").value),
                             reflex_count:parseInt(form.querySelector("#reflex_count").value),
+                            
+
 
                         },
                         x: ary.x[ _event ] ,
@@ -336,7 +364,6 @@ class EditClass {
 
                         Ex.canvas[ _event ][ _event ] = unit;
 
-                        form.remove();
                     }
                     else
                     {
@@ -394,6 +421,8 @@ class EditClass {
                     form.querySelector("#bullet_count").value = unit.bullet.count;
                     form.querySelector("#bullet_rand").value = unit.bullet.rand;
                     form.querySelector("#reflex_count").value = unit.bullet.reflex_count;
+                    form.querySelector("#track_sec").value = unit.bullet.track_sec;
+
 
                     form.querySelector("#w").value = unit.w;
                     form.querySelector("#h").value = unit.h;
@@ -434,6 +463,136 @@ class EditClass {
 
             break;
 
+            case "WallEdit":
+
+                if(Ex.canvas.c===undefined)
+                {
+                    alert(this.config.msg.canvas_no_exist);
+                    return;
+                }
+                
+
+                if(document.querySelector(`#CreateForm${_event}`)!==null)
+                {
+                    var form = document.querySelector(`#CreateForm${_event}`);
+
+                    Ex.canvas.background.grid = parseInt(form.querySelector("#grid").value);
+
+                    return;
+                }
+
+
+
+                var div = document.createElement("div");
+                div.id = `CreateForm${_event}`;
+                this.DragendRegister(div);
+
+                div.innerHTML = this.Temp( _event );
+
+
+                this.ControlMenu.appendChild(div);
+
+                div.querySelector("#grid").value = Ex.canvas.background.grid;
+
+
+            break;
+
+            case "wall_set":
+
+                this.flag.WallMode = !this.flag.WallMode;
+
+                e.target.value = (this.flag.WallMode)?this.config.msg.wall_set[0]:this.config.msg.wall_set[1];
+
+            break;
+
+            case "wall_color":
+
+                this.WallColor();
+
+                var opacity = this.config.info.background.wall.color.substr(-1,1);
+
+                e.target.value = this.config.msg.wall_color[(opacity==="F")?0:1];
+
+            break;
+
+            case "WallColor":
+
+                this.WallColor();
+
+            break;
+
+
+            case "AIEdit":
+
+
+
+                if(Ex.canvas.c===undefined)
+                {
+                    alert(this.config.msg.canvas_no_exist);
+                    return;
+                }
+
+
+                if(document.querySelector(`#CreateForm${_event}`)!==null)
+                {
+                    var form = document.querySelector(`#CreateForm${_event}`);
+
+                    var arg = {};
+
+                    for(let i=0;i<form.querySelectorAll(`input:not([type="button"])`).length;i++)
+                    {
+                        let obj = form.querySelectorAll(`input:not([type="button"])`)[i];
+
+                        arg[obj.id] = parseFloat(obj.value);
+                    }
+
+                    arg.enemy_id = form.querySelector("#enemy_id").value;
+
+                    Ex.canvas.enemy[form.querySelector("#enemy_id").value].AI_config = arg;
+
+                    return;
+                }
+
+                var div = document.createElement("div");
+                div.id = `CreateForm${_event}`;
+                this.DragendRegister(div);
+
+
+                div.innerHTML = this.Temp("AIEdit");
+
+                this.ControlMenu.appendChild(div);
+
+
+
+                div.querySelector("#enemy_id").value = e.target.dataset.enemy_id;
+
+
+                var Ex_AI_config = Ex.canvas.enemy[e.target.dataset.enemy_id].AI_config||{};
+                var config = this.config.info.AI;
+
+                div.querySelector("#up").value = (Ex_AI_config.up!==undefined)?Ex_AI_config.up:config.up;
+
+                div.querySelector("#right").value = (Ex_AI_config.right!==undefined)?Ex_AI_config.right:config.right;
+
+                div.querySelector("#down").value = (Ex_AI_config.down!==undefined)?Ex_AI_config.down:config.down;
+
+                div.querySelector("#left").value = (Ex_AI_config.left!==undefined)?Ex_AI_config.left:config.left;
+
+                div.querySelector("#frequency").value = (Ex_AI_config.frequency!==undefined)?Ex_AI_config.frequency:config.frequency;
+
+                div.querySelector("#h_min").value = (Ex_AI_config.h_min!==undefined)?Ex_AI_config.h_min:config.h_min;
+
+                div.querySelector("#h_max").value = (Ex_AI_config.h_max!==undefined)?Ex_AI_config.h_max:config.h_max;
+
+                div.querySelector("#w_min").value = (Ex_AI_config.w_min!==undefined)?Ex_AI_config.w_min:config.w_min;
+
+                div.querySelector("#w_max").value = (Ex_AI_config.w_max!==undefined)?Ex_AI_config.w_max:config.w_max;
+
+                
+
+
+            break;
+
 
 
             
@@ -442,7 +601,9 @@ class EditClass {
                 if(Ex.canvas.enemy!==undefined) 
                 {
                     for(var name in Ex.canvas.enemy)
-                        delete Ex.canvas.enemy[name].AI;
+                    {
+                        Ex.canvas.enemy[name].AI = {};
+                    }
                 }
 
                 /*
@@ -531,11 +692,9 @@ class EditClass {
 
             break;
 
-            case "WallColor":
+           
 
-                this.WallColor();
-
-            break;
+            
 
 
             case "ControlDirSet":
@@ -649,7 +808,7 @@ class EditClass {
 
         if(arg.mode==="save")
         {
-            Ex.DB.ref(`act_game/${arg.stage}`).set(arg.db_json);
+            Ex.DB.ref(`${Ex.id}/${arg.stage}`).set(arg.db_json);
             Ex.flag.Storage.local.stage = arg.stage;
             Ex.func.StorageUpd();
             
@@ -662,7 +821,7 @@ class EditClass {
         if(arg.mode==="load" && arg.stage!==null && arg.stage!=='')
         {
 
-            Ex.DB.ref(`act_game/${arg.stage}`).once("value",r=>{
+            Ex.DB.ref(`${Ex.id}/${arg.stage}`).once("value",r=>{
 
                 if(r.val()===null) return;
 
@@ -675,7 +834,7 @@ class EditClass {
 
         if(arg.mode==="play" && arg.stage!==null)
         {
-            Ex.DB.ref(`act_game/${arg.stage}`).once("value",r=>{
+            Ex.DB.ref(`${Ex.id}/${arg.stage}`).once("value",r=>{
 
 
                 this.PlayGameLoad(r.val());
@@ -1011,7 +1170,11 @@ class EditClass {
                     
 
                     <input type="button" data-event="CreateCanvas" value="${Ex.config.msg.CreateCanvas[0]}">
-                    <input type="button" data-event="WallColor" value="${Ex.config.msg.wall_color[0]}">
+
+                    <!--
+                    <input type="button" data-event="WallColor" value="${Ex.config.msg.wall_color[0]}">-->
+
+                    <input type="button" data-event="WallEdit" value="障礙物設定">
 
 
 
@@ -1021,6 +1184,8 @@ class EditClass {
                     <input type="button" data-event="SaveOnline" value="儲存關卡">
 
                     <input type="button" data-event="LoadOnline" value="讀取關卡">
+
+                    <input type="button" id="TimerSec" value="">
 
                     <!--
 
@@ -1040,7 +1205,7 @@ class EditClass {
                 html = `
                     背景圖片網址：<input type="text" id="url" value="${this.config.info.background.src}"><BR>
 
-                    地圖方格大小：<input type="number" id="grid" value="${this.config.info.background.wall.grid}"><BR>
+                    障礙物方格大小：<input type="number" id="grid" value="${this.config.info.background.wall.grid}"><BR>
 
                     過關畫面網址：<input type="text" id="game_pass" value=""><BR>
 
@@ -1054,7 +1219,7 @@ class EditClass {
 
                     <HR>
                     <input type="button" data-event="${name}" value="送出">
-                    <input type="button" data-event="CloseParent" value="取消">
+                    ${this.Temp('Close')}
                 `;
 
             break;
@@ -1068,7 +1233,7 @@ class EditClass {
 
                     血量：<input type="number" id="hp" value="${this.config.info[name].hp.v}"><BR>
                     移動速度<input type="number" id="speed" value="${this.config.info[name].speed}"><BR>
-                    射擊頻率<input type="number" id="speed_shoot" value="${this.config.info[name].speed_shoot}"><BR>
+                    射擊頻率(每秒/發)<input type="number" id="speed_shoot" value="${this.config.info[name].speed_shoot}"><BR>
 
                     高：<input id="h" type="number" value="${this.config.info[name].h}"><BR>
                     寬：<input id="w" type="number" value="${this.config.info[name].w}"><BR>
@@ -1086,9 +1251,11 @@ class EditClass {
 
                     子彈數量：<input id="bullet_count" type="number" value="${this.config.info[name].bullet.count}"><BR>
 
-                    彈道飄移倍率：<input id="bullet_rand" type="number" value="${this.config.info[name].bullet.rand}"><BR>
+                    彈道飄移倍率(子彈本身高寬)：<input id="bullet_rand" type="number" value="${this.config.info[name].bullet.rand}"><BR>
 
                     反彈子彈反彈次數：<input id="reflex_count" type="number" value="${this.config.info[name].bullet.reflex_count}"><BR>
+
+                    追蹤子彈追蹤秒數：<input id="track_sec" type="number" value="${this.config.info[name].bullet.track_sec}"><BR>
 
                     <div ${(name==="enemy")?`style="display:none"`:""}>
                         <input id="up" data-value="${this.config.info[name].control.up}" value="上" 
@@ -1105,9 +1272,14 @@ class EditClass {
 
                     </div>
 
+
+                    ${(name==="enemy")?`
+                    <input type="button" data-enemy_id="${name}" data-event="AIEdit" value="AI行動設定">`:``
+                    }
+
                     <HR>
                     <input type="button" data-event="${name}" value="送出">
-                    <input type="button" data-event="CloseParent" value="取消">
+                    ${this.Temp('Close')}
                 `;
             break;
 
@@ -1132,7 +1304,57 @@ class EditClass {
 
             break;
 
+            case "AIEdit":
+                
+                html = `
+                
+                    移動機率設定<BR>
+                    <input type="hidden" id="enemy_id" value="">
+                    上：<input id="up" type="number"> %<BR>
+                    右：<input id="right" type="number"> %<BR>
+                    下：<input id="down" type="number"> %<BR>
+                    左：<input id="left" type="number"> %<BR>
+                    頻率(秒)：<input id="frequency" type="number"><BR>
+
+                    <HR>
+                    移動範圍 (背景長寬倍率)<BR>
+                    左右：${Ex.canvas.c.width}<BR>
+                    上下：${Ex.canvas.c.height}<BR>
+                    上：<input id="h_min" type="number"><BR>
+                    右：<input id="w_max" type="number"><BR>
+                    下：<input id="h_max" type="number"><BR>
+                    左：<input id="w_min" type="number"><BR>
+
+                    <HR>
+                    <input type="button" data-event="${name}" value="送出">
+                    ${this.Temp('Close')}
+                `;
+
+            break;
+
+
+            case "WallEdit":
+
+                html = `
+                    障礙物方格大小：<input type="number" id="grid"><BR>
+                    <input type="button" data-event="wall_set" value="${this.config.msg.wall_set[0]}"> <input type="button" data-event="wall_color" value="${this.config.msg.wall_color[0]}">
+                    <HR>
+                    <input type="button" data-event="${name}" value="送出">
+                    ${this.Temp('Close')}
+                
+                `;
+
+            break;
             
+
+            case "Close":
+
+                html = `
+                    
+                    <input type="button" data-event="CloseParent" value="關閉">
+                `;
+
+            break;
 
         }
 

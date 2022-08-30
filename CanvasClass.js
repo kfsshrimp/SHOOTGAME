@@ -271,6 +271,7 @@ class CanvasClass{
             {
                 this.c2d.beginPath();
 
+
                 this.c2d.fillStyle = arg.c;
                 this.c2d.fillRect(
                     arg.x,
@@ -282,6 +283,21 @@ class CanvasClass{
                 this.c2d.fill();
         
                 this.c2d.closePath();
+
+                if(arg.border!==undefined)
+                {
+                    this.c2d.beginPath();
+                    this.c2d.strokeStyle = arg.border;
+                    this.c2d.lineWidth = 1;
+                    this.c2d.strokeRect(
+                        arg.x,
+                        arg.y,
+                        arg.w,
+                        arg.h
+                    );
+                    this.c2d.stroke();
+                    this.c2d.closePath();
+                }
             }            
         }
     }

@@ -10,6 +10,7 @@ class ConfigClass{
             player_exist:"玩家單位已存在",
             enemy_exist:"敵人單位已存在",
             wall_color:["隱藏障礙物","顯示障礙物"],
+            wall_set:["設置障礙物","移除障礙物"],
             game_pause:["暫停遊戲","繼續遊戲"],
             game_start:"開始遊戲",
             Createplayer:["建立玩家單位","玩家單位詳細"],
@@ -51,6 +52,18 @@ class ConfigClass{
                     color:"#00f"
                 }
             },
+            AI:{
+                up:25,
+                right:25,
+                down:25,
+                left:25,
+                frequency:1,
+                h_min:0.1,
+                h_max:0.9,
+                w_min:0.1,
+                w_max:0.9
+
+            },
             player:{
                 w:20,
                 h:20,
@@ -66,9 +79,11 @@ class ConfigClass{
                     count:1,
                     rand:2,
                     reflex_count:0,
+                    track_sec:1,
                     mode:{
                         normal:"普通",
-                        reflex:"反彈"
+                        reflex:"反彈",
+                        track:"追蹤",
                     }
                 },
                 hp:{
@@ -90,7 +105,7 @@ class ConfigClass{
                 w:20,
                 h:20,
                 src:"https://avatars.plurk.com/14556765-big9788529.jpg",
-                color:"#00f",
+                color:"#f0f",
                 bullet:{
                     src:"https://avatars.plurk.com/14556765-big9788529.jpg",
                     w:20,
@@ -101,9 +116,11 @@ class ConfigClass{
                     count:1,
                     rand:2,
                     reflex_count:0,
+                    track_sec:1,
                     mode:{
                         normal:"普通",
-                        reflex:"反彈"
+                        reflex:"反彈",
+                        track:"追蹤",
                     }
                 },
                 hp:{

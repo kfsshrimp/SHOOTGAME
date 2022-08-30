@@ -90,9 +90,41 @@
                 Ex.func.UnitControl('player');
                 
             },
+            BulletTrack:(obj)=>{
+
+                obj._track_sec = obj._track_sec||0;
+
+                if(obj._track_sec/60>obj.track_sec) return;
+
+                obj._track_sec++;
+
+
+                obj.ox = obj._x;
+                obj.oy = obj._y;
+
+                if(obj.unit.type==="player")
+                {
+                    obj.x2 = Ex.flag.mousemove.offsetX||Ex.canvas.c.width;
+                    obj.y2 = Ex.flag.mousemove.offsetY||Math.floor(Ex.canvas.c.height/2);
+                }
+
+                if(obj.unit.type==="enemy")
+                {
+                    obj.x2 = 0;
+                    obj.y2 = Math.floor(Ex.canvas.c.height/2);
+        
+                    for(var name in Ex.canvas.player)
+                    {
+                        obj.x2 = Ex.canvas.player[name].x;
+                        obj.y2 = Ex.canvas.player[name].y;
+                    }
+                }
+
+
+            },
             BulletReflex:(obj,wall)=>{
 
-                if(obj.reflex<0)
+                if(obj.reflex_count<0)
                 {
                     delete Ex.canvas.bullet[obj.id];
                     return;
@@ -114,7 +146,7 @@
                     if(obj.y_d===1) obj.oy = obj.y2+1;
                     
 
-                    obj.reflex-=1;
+                    obj.reflex_count-=1;
 
                     return;
                 }
@@ -174,7 +206,7 @@
                 if(obj._x+obj.w>=max_w || 
                 obj._y+obj.h>=max_h || 
                 obj._x<=min_w ||
-                obj._y<=min_h) obj.reflex-=1;
+                obj._y<=min_h) obj.reflex_count-=1;
                 
 
 
@@ -279,6 +311,11 @@
                         if(obj.mode==="reflex")
                         {
                             Ex.func.BulletReflex(obj);
+                        }
+
+                        if(obj.mode==="track")
+                        {
+                            Ex.func.BulletTrack(obj);
                         }
                     }
 
@@ -430,33 +467,38 @@
             },
             UnitShoot:(obj)=>{
 
-                var shoot_limit =  1000 * (1-obj.speed_shoot*0.01);
-
-                if(new Date().getTime() - obj.shoot_last_time < shoot_limit )
-                {
-                    return;
-                }
-                var x,y;
+                obj._speed_shoot = obj._speed_shoot||0;
 
                 
+                
+                obj._speed_shoot++;
+
+                if(obj._speed_shoot < 60/obj.speed_shoot) return;
+
+                obj._speed_shoot = 0;
+                
+
+
+                var x2,y2;
+
                 if(obj.type==="player")
                 {
-                    x = Ex.flag.mousemove.offsetX||Ex.canvas.c.width;
-                    y = Ex.flag.mousemove.offsetY||Math.floor(Ex.canvas.c.height/2);
+                    x2 = Ex.flag.mousemove.offsetX||Ex.canvas.c.width;
+                    y2 = Ex.flag.mousemove.offsetY||Math.floor(Ex.canvas.c.height/2);
                 }
                 else if(obj.type==="enemy")
                 {
-                    x = 0;
-                    y = Math.floor(Ex.canvas.c.height/2);
+                    x2 = 0;
+                    y2 = Math.floor(Ex.canvas.c.height/2);
         
                     for(var name in Ex.canvas.player)
                     {
-                        x = Ex.canvas.player[name].x;
-                        y = Ex.canvas.player[name].y;
+                        x2 = Ex.canvas.player[name].x;
+                        y2 = Ex.canvas.player[name].y;
                     }
                 }
 
-                obj.shoot_last_time = new Date().getTime();
+                //obj.shoot_last_time = new Date().getTime();
 
                 var id = `${obj.id}_${new Date().getTime()}`;
 
@@ -477,11 +519,12 @@
                         },
                         type:"bullet",
                         mode:obj.bullet.mode,
-                        reflex:obj.bullet.reflex_count,
+                        reflex_count:obj.bullet.reflex_count,
+                        track_sec:obj.bullet.track_sec,
                         x:obj.x,
                         y:obj.y,
-                        x2:x + x_r*plus_minus,
-                        y2:y + y_r*plus_minus,
+                        x2:x2 + x_r*plus_minus,
+                        y2:y2 + y_r*plus_minus,
                         w:obj.bullet.w,
                         h:obj.bullet.h,
                         hp:obj.bullet.hp,
@@ -495,7 +538,7 @@
                 if( !Array.isArray(array) )
                 {
                     var _array = [];
-                    for(var i=1;i<=array;i++ ) _array.push(i);
+                    for(var i=0;i<=array;i++ ) _array.push(i);
                     array = _array;
                 }
         
@@ -545,6 +588,7 @@
         Ex.Ref = ()=>{
             try{
 
+                document.querySelector("#TimerSec").value = new Date().getSeconds();
 
                 if(Ex.flag.game_start)
                 {
