@@ -1,25 +1,28 @@
 class AIClass{
 
-    constructor(enemy){
+    constructor(unit){
 
         this.up = ()=>{ 
-            Ex.flag.key[ "AI_UP" ] = true;
-            Ex.flag.key[ "AI_DOWN" ] = false;
+            Ex.flag.key[ unit.control.up ] = true;
+            Ex.flag.key[ unit.control.down ] = false;
         }
         this.down = ()=>{ 
-            Ex.flag.key[ "AI_DOWN" ] = true;
-            Ex.flag.key[ "AI_UP" ] = false;
+            Ex.flag.key[ unit.control.down ] = true;
+            Ex.flag.key[ unit.control.up ] = false;
         }
         this.right = ()=>{ 
-            Ex.flag.key[ "AI_RIGHT" ] = true;
-            Ex.flag.key[ "AI_LEFT" ] = false;
+            Ex.flag.key[ unit.control.right ] = true;
+            Ex.flag.key[ unit.control.left ] = false;
         }
         this.left = ()=>{ 
-            Ex.flag.key[ "AI_LEFT" ] = true;
-            Ex.flag.key[ "AI_RIGHT" ] = false;
+            Ex.flag.key[ unit.control.left ] = true;
+            Ex.flag.key[ unit.control.right ] = false;
         }
 
-        this.enemy = enemy;
+        unit.AI_config = Ex.config.info.AI_config;
+
+
+        this.unit = unit;
         this.timer = 1;
         this.config = {};
 
@@ -30,9 +33,9 @@ class AIClass{
     Ref = ()=>{
         try{
 
-            if(Ex.flag.game_start)
+            if(Ex.flag.game_start && this.unit.AI_config.enabled)
             {
-                Ex.func.UnitControl('enemy');
+                Ex.func.UnitControl(this.unit.type);
 
                 this.AI_Move();
                 this.AI_MoveCheck();
@@ -49,36 +52,34 @@ class AIClass{
 
     AI_MoveCheck = ()=>{
 
-        if(this.enemy.x+this.enemy.w>=Math.floor(Ex.canvas.c.width*Ex.canvas.enemy.enemy.AI_config.w_max) && Ex.flag.key[ "AI_RIGHT" ]===true)
+        var u = this.unit;
+
+        if(u.x+u.w>=Math.floor(Ex.canvas.c.width*Ex.canvas[u.type][u.id].AI_config.w_max) && Ex.flag.key[ u.control.right ]===true)
         {
-            Ex.flag.key[ "AI_UP" ] = false;
-            Ex.flag.key[ "AI_DOWN" ] = false;
-            Ex.flag.key[ "AI_RIGHT" ] = false;
-            Ex.flag.key[ "AI_LEFT" ] = false;
+            Object.values( u.control ).forEach(v=>{
+                Ex.flag.key[ v ] = false;
+            });
         }
 
-        if(this.enemy.x<=Math.floor(Ex.canvas.c.width*Ex.canvas.enemy.enemy.AI_config.w_min) && Ex.flag.key[ "AI_LEFT" ]===true)
+        if(u.x<=Math.floor(Ex.canvas.c.width*Ex.canvas[u.type][u.id].AI_config.w_min) && Ex.flag.key[ u.control.left ]===true)
         {
-            Ex.flag.key[ "AI_UP" ] = false;
-            Ex.flag.key[ "AI_DOWN" ] = false;
-            Ex.flag.key[ "AI_RIGHT" ] = false;
-            Ex.flag.key[ "AI_LEFT" ] = false;
+            Object.values( u.control ).forEach(v=>{
+                Ex.flag.key[ v ] = false;
+            });
         }
 
-        if(this.enemy.y+this.enemy.h>=Math.floor(Ex.canvas.c.height*Ex.canvas.enemy.enemy.AI_config.h_max) && Ex.flag.key[ "AI_DOWN" ]===true)
+        if(u.y+u.h>=Math.floor(Ex.canvas.c.height*Ex.canvas[u.type][u.id].AI_config.h_max) && Ex.flag.key[ u.control.down ]===true)
         {
-            Ex.flag.key[ "AI_UP" ] = false;
-            Ex.flag.key[ "AI_DOWN" ] = false;
-            Ex.flag.key[ "AI_RIGHT" ] = false;
-            Ex.flag.key[ "AI_LEFT" ] = false;
+            Object.values( u.control ).forEach(v=>{
+                Ex.flag.key[ v ] = false;
+            });
         }
 
-        if(this.enemy.y<=Math.floor(Ex.canvas.c.height*Ex.canvas.enemy.enemy.AI_config.h_min) && Ex.flag.key[ "AI_UP" ]===true)
+        if(u.y<=Math.floor(Ex.canvas.c.height*Ex.canvas[u.type][u.id].AI_config.h_min) && Ex.flag.key[ u.control.up ]===true)
         {
-            Ex.flag.key[ "AI_UP" ] = false;
-            Ex.flag.key[ "AI_DOWN" ] = false;
-            Ex.flag.key[ "AI_RIGHT" ] = false;
-            Ex.flag.key[ "AI_LEFT" ] = false;
+            Object.values( u.control ).forEach(v=>{
+                Ex.flag.key[ v ] = false;
+            });
         }
         
 
@@ -87,21 +88,24 @@ class AIClass{
 
     AI_Move = ()=>{
 
-        this.enemy.AI_config._frequency = this.enemy.AI_config._frequency||0;
+        var u = this.unit;
+
+        u.AI_config = u.AI_config||Ex.config.info.AI_config;
+
+        u.AI_config._frequency = u.AI_config._frequency||0;
         
-        this.enemy.AI_config._frequency++;
+        u.AI_config._frequency++;
 
-        if(this.enemy.AI_config._frequency<this.enemy.AI_config.frequency*60) return;
+        if(u.AI_config._frequency<u.AI_config.frequency*60) return;
 
-        this.enemy.AI_config._frequency = 0;
+        u.AI_config._frequency = 0;
 
 
-        Ex.flag.key[ "AI_UP" ] = false;
-        Ex.flag.key[ "AI_DOWN" ] = false;
-        Ex.flag.key[ "AI_RIGHT" ] = false;
-        Ex.flag.key[ "AI_LEFT" ] = false;
+        Object.values( u.control ).forEach(v=>{
+            Ex.flag.key[ v ] = false;
+        });
 
-        var ary = ["up","down","right","left"];
+        var ary = Object.keys( u.control );
         
 
         /*
@@ -123,10 +127,10 @@ class AIClass{
 
         for(var key of ary)
         {
-            for(var i=1;i<=Ex.canvas.enemy.enemy.AI_config[key];i++) move_ary.push(key);
-            for(var i=1;i<=Ex.canvas.enemy.enemy.AI_config[key];i++) move_ary.push(key);
-            for(var i=1;i<=Ex.canvas.enemy.enemy.AI_config[key];i++) move_ary.push(key);
-            for(var i=1;i<=Ex.canvas.enemy.enemy.AI_config[key];i++) move_ary.push(key);
+            for(var i=1;i<=Ex.canvas[u.type][u.id].AI_config[key];i++) move_ary.push(key);
+            for(var i=1;i<=Ex.canvas[u.type][u.id].AI_config[key];i++) move_ary.push(key);
+            for(var i=1;i<=Ex.canvas[u.type][u.id].AI_config[key];i++) move_ary.push(key);
+            for(var i=1;i<=Ex.canvas[u.type][u.id].AI_config[key];i++) move_ary.push(key);
         }
             
         if(move_ary.length!==0)

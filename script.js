@@ -139,12 +139,17 @@
 
                 if(wall!==undefined)
                 {
-                    if(obj.x_d===-1) obj.ox = obj.x2-1;
-                    if(obj.x_d===1) obj.ox = obj.x2+1;
-
-                    if(obj.y_d===-1) obj.oy = obj.y2-1;
-                    if(obj.y_d===1) obj.oy = obj.y2+1;
+                    var collision_x = (obj.x - wall.x - Math.floor(wall.w/2));
                     
+                    var collision_y = (obj.y - wall.y - Math.floor(wall.h/2));
+
+
+                    if(obj.x_d===-1) obj.ox = obj.x2-obj.x_p;
+                    if(obj.x_d===1) obj.ox = obj.x2+obj.x_p;
+
+                    if(obj.y_d===-1) obj.oy = obj.y2-obj.y_p;
+                    if(obj.y_d===1) obj.oy = obj.y2+obj.y_p;
+
 
                     obj.reflex_count-=1;
 
@@ -153,51 +158,51 @@
 
 
                 if(obj._x+obj.w>=max_w){
-                    obj.ox = obj.x2+1;
+                    obj.ox = obj.x2+obj.x_p;
                     if(obj.y_d===1)
                     {
-                        obj.oy = obj.y2-1; 
+                        obj.oy = obj.y2-obj.y_p; 
                     }
                     else if(obj.y_d===-1)
                     {
-                        obj.oy = obj.y2+1;
+                        obj.oy = obj.y2+obj.y_p;
                     }
                 }
                 if(obj._y+obj.h>=max_h)
                 {
-                    obj.oy = obj.y2+1;
+                    obj.oy = obj.y2+obj.y_p;
                     if(obj.x_d===1)
                     {
-                        obj.ox = obj.x2-1; 
+                        obj.ox = obj.x2-obj.x_p; 
                     }
                     else if(obj.x_d===-1)
                     {
-                        obj.ox = obj.x2+1;
+                        obj.ox = obj.x2+obj.x_p;
                     }
                 }
 
                 if(obj._x<=min_w)
                 {
-                    obj.ox = obj.x2-1;
+                    obj.ox = obj.x2-obj.x_p;
                     if(obj.y_d===1)
                     {
-                        obj.oy = obj.y2-1; 
+                        obj.oy = obj.y2-obj.y_p; 
                     }
                     else if(obj.y_d===-1)
                     {
-                        obj.oy = obj.y2+1;
+                        obj.oy = obj.y2+obj.y_p;
                     }
                 }
                 if(obj._y<=min_h)
                 {
-                    obj.oy = obj.y2-1;
+                    obj.oy = obj.y2-obj.y_p;
                     if(obj.x_d===1)
                     {
-                        obj.ox = obj.x2-1; 
+                        obj.ox = obj.x2-obj.x_p; 
                     }
                     else if(obj.x_d===-1)
                     {
-                        obj.ox = obj.x2+1;
+                        obj.ox = obj.x2+obj.x_p;
                     }
                 }
 
@@ -209,6 +214,87 @@
                 obj._y<=min_h) obj.reflex_count-=1;
                 
 
+
+            },
+            BulletMoveBreakoutClone:()=>{
+
+                for(let i in Ex.canvas.bullet)
+                {
+                    let obj = Ex.canvas.bullet[i];
+
+
+                    obj._x = obj._x||obj.x;
+                    obj._y = obj._y||obj.y;
+
+                    obj.ox = obj.ox||obj.x;
+                    obj.oy = obj.oy||obj.y;
+
+                    obj._speed = obj._speed||obj.speed;
+
+                    if(obj.ox>obj.x2) obj.x_d = -1;
+                    if(obj.ox<obj.x2) obj.x_d = 1;
+                    if(obj.ox===obj.x2) obj.x_d = 0;
+
+                    if(obj.oy>obj.y2) obj.y_d = -1;
+                    if(obj.oy<obj.y2) obj.y_d = 1;
+                    if(obj.oy===obj.y2) obj.y_d = 0;
+
+                    
+                    obj.x_l = Math.abs(obj.ox-obj.x2);
+                    obj.y_l = Math.abs(obj.oy-obj.y2);
+
+                    obj.x_p = (obj.x_l/obj.y_l>1)?1:(obj.x_l/obj.y_l);
+                    obj.y_p = (obj.y_l/obj.x_l>1)?1:(obj.y_l/obj.x_l);
+
+
+                    obj._x+=parseFloat(obj.speed)*obj.x_d*obj.x_p;
+                    obj._y+=parseFloat(obj.speed)*obj.y_d*obj.y_p;
+
+
+                    var hit_obj = Ex.func.BulletCollision(obj);
+
+                    if( hit_obj!==false )
+                    {
+                        obj.reflex_count+=1
+                        Ex.func.BulletReflex(obj,hit_obj);
+
+                        if(hit_obj.type==="wall")
+                        {
+                            hit_obj.hp-=obj.hp;
+                            if(hit_obj.hp<=0)
+                                delete Ex.canvas[hit_obj.type][hit_obj.id]; 
+                        }
+
+                    }
+                    else
+                    {
+                        obj.x = parseInt(obj._x);
+                        obj.y = parseInt(obj._y);
+    
+                        obj.speed = obj._speed;
+
+
+                        if(obj.mode==="reflex")
+                        {
+                            Ex.func.BulletReflex(obj);
+                        }
+
+                        if(obj.mode==="track")
+                        {
+                            Ex.func.BulletTrack(obj);
+                        }
+                    }
+
+
+                    if(
+                        obj._x+obj.w<=0 || obj._x>=Ex.canvas.c.width || 
+                        obj._y+obj.h<=0 || obj._y>=Ex.canvas.c.height
+                    )
+                    {
+                        delete Ex.canvas.bullet[i];
+                    }
+                    
+                }
 
             },
             BulletMove:()=>{
@@ -338,6 +424,7 @@
                 {
                     let obj = Ex.canvas[type][name];
                     let control = obj.control;
+
                     
                     obj._x = obj._x||obj.x;
                     obj._y = obj._y||obj.y;
@@ -372,8 +459,24 @@
 
                     }
 
-                    Ex.func.UnitShoot(obj);
+
+                    if(Ex.EditClass.BreakoutCloneMode!==true)
+                        Ex.func.UnitShoot(obj);
                 }
+
+            },
+            CollisionImg:(obj)=>{
+
+                if(obj.img_list.collision===undefined) return;
+                
+                obj.img_list._self = obj.img_list._self||obj.img_list.self;
+
+                setTimeout(()=>{
+                    obj.img_list.self = obj.img_list._self;
+                },500);
+
+                obj.img_list.self = obj.img_list.collision;
+
 
             },
             BulletCollision:(obj)=>{
@@ -383,28 +486,41 @@
                 
                 Object.values(Ex.canvas.enemy).concat(Object.values(Ex.canvas.player)).forEach(hit_obj=>{
 
-                    if(hit_obj.id===obj.unit.id) return;
+                    
+                    if(hit_obj.id!=="BreakoutClonePlayer" && hit_obj.id===obj.unit.id) return;
 
                     if(
                         obj._x       <= hit_obj.x+hit_obj.w && 
                         obj._y       <= hit_obj.y+hit_obj.h && 
                         obj._x+obj.w >= hit_obj.x && 
                         obj._y+obj.h >= hit_obj.y 
-                    ) 
-                    _r = hit_obj;
+                    )
+                    {
+                        _r = hit_obj;
+                        Ex.func.CollisionImg(hit_obj);
+                    }
 
                 });
 
                 Object.values(Ex.canvas.wall).forEach(hit_obj=>{
-
                     
                     if(
                         obj._x       <= hit_obj.x+hit_obj.w && 
                         obj._y       <= hit_obj.y+hit_obj.h && 
                         obj._x+obj.w >= hit_obj.x && 
                         obj._y+obj.h >= hit_obj.y 
-                    ) 
-                    _r = hit_obj;
+                    )
+                    {
+                        if(obj.mode==="through")
+                        {
+                            hit_obj.mode = "broke";
+                            return;
+                        }
+                        if(hit_obj.mode==="broke") return;
+
+                        _r = hit_obj;
+                    }
+                    
 
                 });
 
@@ -451,13 +567,15 @@
                 all_obj.forEach(hit_obj=>{
 
                     if(hit_obj.id===obj.id) return;
+                    if(hit_obj.mode==="broke") return;
+
 
                     if(
                         obj._x       <= hit_obj.x+hit_obj.w && 
                         obj._y       <= hit_obj.y+hit_obj.h && 
                         obj._x+obj.w >= hit_obj.x && 
                         obj._y+obj.h >= hit_obj.y 
-                    ) 
+                    )
                     _r = hit_obj;
 
                 });
@@ -467,9 +585,9 @@
             },
             UnitShoot:(obj)=>{
 
+
                 obj._speed_shoot = obj._speed_shoot||0;
 
-                
                 
                 obj._speed_shoot++;
 
@@ -481,12 +599,25 @@
 
                 var x2,y2;
 
+
                 if(obj.type==="player")
                 {
-                    x2 = Ex.flag.mousemove.offsetX||Ex.canvas.c.width;
-                    y2 = Ex.flag.mousemove.offsetY||Math.floor(Ex.canvas.c.height/2);
+                    x2 = Ex.canvas.c.width;
+                    y2 = Math.floor(Ex.canvas.c.height/2);
+        
+                    /*
+                    for(var name in Ex.canvas.enemy)
+                    {
+                        x2 = Ex.canvas.enemy[name].x;
+                        y2 = Ex.canvas.enemy[name].y;
+                    }
+                    */
+
+                    x2 = Ex.flag.mousemove.offsetX;
+                    y2 = Ex.flag.mousemove.offsetY;
                 }
-                else if(obj.type==="enemy")
+                
+                if(obj.type==="enemy")
                 {
                     x2 = 0;
                     y2 = Math.floor(Ex.canvas.c.height/2);
@@ -497,6 +628,10 @@
                         y2 = Ex.canvas.player[name].y;
                     }
                 }
+            
+                
+
+                
 
                 //obj.shoot_last_time = new Date().getTime();
 
@@ -588,6 +723,7 @@
         Ex.Ref = ()=>{
             try{
 
+                if(document.querySelector("#TimerSec"))
                 document.querySelector("#TimerSec").value = new Date().getSeconds();
 
                 if(Ex.flag.game_start)
@@ -596,7 +732,11 @@
                     //Ex.func.EnemyControl();
                     //Ex.func.EnemyAI();
 
-                    Ex.func.BulletMove();
+
+                    if(Ex.EditClass.BreakoutCloneMode!==true)
+                        Ex.func.BulletMove();
+                    else
+                        Ex.func.BulletMoveBreakoutClone();
                 }
 
                 Ex.anima_timer = requestAnimationFrame(Ex.Ref);

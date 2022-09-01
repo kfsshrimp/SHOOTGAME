@@ -33,7 +33,15 @@ class CanvasClass{
 
                 this.c.width = this.background.img_list.self.img.width;
                 this.c.height = this.background.img_list.self.img.height;
-            
+                
+
+                var wh = this.Resize(this.c.width,this.c.height);
+
+                this.c.width = wh[0];
+                this.c.height = wh[1];
+                
+
+
                 document.body.appendChild(this.c);
                 this.Ref();
 
@@ -70,7 +78,7 @@ class CanvasClass{
 
         try{
 
-        
+
             this.Draw({
                 img:this.background.img_list.self.img,
                 img_error:this.background.img_list.self.img_error,
@@ -78,7 +86,7 @@ class CanvasClass{
                 y:0,
                 w:this.c.width,
                 h:this.c.height,
-                c:this.config.info.background.color
+                c:this.background.img_list.self.color
             });
             
 
@@ -93,7 +101,7 @@ class CanvasClass{
                     y:wall.y,
                     w:wall.w,
                     h:wall.h,
-                    c:this.config.info.background.wall.color
+                    c:(wall.mode==="broke")?this.background.img_list.wall.broke:this.background.img_list.wall.color
                 });
             }
 
@@ -114,47 +122,32 @@ class CanvasClass{
                     y:bullet.y,
                     w:bullet.w,
                     h:bullet.h,
-                    c:this.config.info[bullet.unit.type].bullet.color
+                    c:this[bullet.unit.type][bullet.unit.id].img_list.bullet.color
                 });
             }
 
-            for(var key in this.enemy)
+
+            for(var type of ["player","enemy"])
             {
-                var enemy = this.enemy[key];
+                for(var key in this[type])
+                {
+                    var unit = this[type][key];
+                    
+                    this.Draw({
+                        img:unit.img_list.self.img,
+                        img_error:unit.img_list.self.img_error,
+                        x:unit.x,
+                        y:unit.y,
+                        w:unit.w,
+                        h:unit.h,
+                        c:unit.img_list.self.color
+                    });
 
-                this.Draw({
-                    img:enemy.img_list.self.img,
-                    img_error:enemy.img_list.self.img_error,
-                    x:enemy.x,
-                    y:enemy.y,
-                    w:enemy.w,
-                    h:enemy.h,
-                    c:this.config.info.enemy.color
-                });
-
-                this.HpShow(enemy);
+                    if(unit.hp!==undefined) this.HpShow(unit);
+                }
             }
 
-    
-            for(var key in this.player)
-            {
-                var player = this.player[key];
 
-
-                this.Draw({
-                    img:player.img_list.self.img,
-                    img_error:player.img_list.self.img_error,
-                    x:player.x,
-                    y:player.y,
-                    w:player.w,
-                    h:player.h,
-                    c:this.config.info.player.color
-                });
-
-                //this.UnitArcRange(player);
-
-                this.HpShow(player);
-            }
 
             
             for(var key in this.other_back)
@@ -166,6 +159,7 @@ class CanvasClass{
             this.anima_timer = requestAnimationFrame(this.Ref);
 
         }catch(e){
+
             console.log(e);
 
             return;
@@ -242,9 +236,9 @@ class CanvasClass{
                 arg.img,
                 arg.x,
                 arg.y,
-                arg.w||arg.img.width,
-                arg.h||arg.img.height
-                );
+                arg.w,
+                arg.h,
+            );
         }
         else
         {
@@ -335,6 +329,35 @@ class CanvasClass{
         }
     }
 
+
+    Resize = (w,h)=>{
+
+        if(w>window.innerWidth)
+        {
+            h = Math.floor( (window.innerWidth/w) * h );
+            w = window.innerWidth;
+
+            if(h>window.innerHeight)
+            {
+                return this.Resize(w,h);
+            }
+        }
+
+        if(h>window.innerHeight)
+        {
+            w = Math.floor( (window.innerHeight/h) * w );
+            h = window.innerHeight;
+
+            if(w>window.innerWidth)
+            {
+                return this.Resize(w,h);
+            }
+        }
+
+
+        return [w,h];
+
+    }
     
     
 

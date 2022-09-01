@@ -6,51 +6,48 @@ class EditClass {
         this.flag = {
             ControlDirSet:null,
             WallMode:true,
-            mousedown:{}
+            mousedown:{},
+            mode:'',
+            BreakoutCloneMode:false
         };
         var url_params = new URL(location.href).searchParams;
-
-
-        var ControlMenu = document.createElement("div");
-        this.ControlMenu = ControlMenu;
-
-        ControlMenu.id = "ControlMenu";
-        ControlMenu.innerHTML = this.Temp('default');
-
-        ControlMenu.addEventListener("click",this.ClickEvent);
-        window.addEventListener("keydown",this.KeyDown);
-        
-        
-
-
-        document.addEventListener("mousedown",this.DragendRegister);
 
 
         if(
             Ex.flag.Storage.local.stage!==undefined && 
             url_params.get("stage")===null)
         {
+            
             this.SaveLoad({
-                mode:"load",
-                stage:Ex.flag.Storage.local.stage
+                mode:"LoadOnline"
             });
-        }
 
+        }
 
 
         if(url_params.get("stage")!==null)
         {
             this.SaveLoad({
-                mode:"play",
-                stage:url_params.get("stage")
+                mode:"Play"
             });
 
-            ControlMenu.innerHTML = this.Temp('play');
         }
+
+        this.ControlMenu = document.createElement("div");
+
+        this.ControlMenu.id = "ControlMenu";
+        this.ControlMenu.innerHTML = this.Temp('default');
+
+        this.ControlMenu.addEventListener("click",this.ClickEvent);
+        window.addEventListener("keydown",this.KeyDown);
+        
+        
+
+        document.addEventListener("mousedown",this.DragendRegister);
 
         
         
-        document.body.appendChild(ControlMenu);
+        document.body.appendChild(this.ControlMenu);
         
 
     }
@@ -76,12 +73,12 @@ class EditClass {
             {
                 id:id,
                 type:"wall",
-                x:e.offsetX - e.offsetX%Ex.canvas.background.grid,
-                y:e.offsetY - e.offsetY%Ex.canvas.background.grid,
-                w:Ex.canvas.background.grid,
-                h:Ex.canvas.background.grid,
-                hp:this.config.info.background.wall.hp,
-                color:this.config.info.background.wall.color
+                x:e.offsetX - e.offsetX%Ex.canvas.background.img_list.wall.grid,
+                y:e.offsetY - e.offsetY%Ex.canvas.background.img_list.wall.grid,
+                w:Ex.canvas.background.img_list.wall.grid,
+                h:Ex.canvas.background.img_list.wall.grid,
+                hp:Ex.canvas.background.img_list.wall.hp,
+                color:Ex.canvas.background.img_list.wall.color
             };
         }
         else
@@ -168,16 +165,72 @@ class EditClass {
                     cancelAnimationFrame(Ex.canvas.enemy[name].AI.anima_timer);
                 }
 
-                Ex.canvas.c.remove();
+                if(Ex.canvas.c) Ex.canvas.c.remove();
+
                 Ex.canvas = {};
-                Ex.flag.Storage.local = {};
-                Ex.func.StorageUpd();
+                //Ex.flag.Storage.local = {};
+                //Ex.func.StorageUpd();
 
                 Ex.config = new ConfigClass();
                 this.config = Ex.config;
 
                 this.ControlMenu.innerHTML = this.Temp('default');
                 
+
+            break;
+
+
+            case "BreakoutClone":
+
+                if(document.querySelector(`#CreateForm${_event}`)!==null)
+                {
+                    var form = document.querySelector(`#CreateForm${_event}`);
+
+
+                    Ex.canvas = new CanvasClass({
+        
+                        background:{
+                            img_list:{
+                                self:{
+                                    src:form.querySelector("#url").value,
+                                    color:this.config.info.background.img_list.self.color
+                                },
+                                wall:{
+                                    color:this.config.info.background.img_list.wall.color,
+                                    broke:this.config.info.background.img_list.wall.broke,
+                                    grid:parseInt(form.querySelector("#grid").value),
+                                    hp:1
+
+                                }
+                            }
+                        },
+                        config:this.config
+                    });
+
+                    Ex.canvas.c.addEventListener("mousedown",this.MouseDown);
+
+                    
+                    var _t = setInterval(()=>{
+                        if(Ex.canvas.anima_timer!==undefined)
+                        {
+                            this.BreakoutCloneFunc();
+                            clearInterval(_t);
+                        }
+                    },0);
+                    
+
+                    form.remove();
+                    return;
+                }
+
+                var div = document.createElement("div");
+                div.id = `CreateForm${_event}`;
+                this.DragendRegister(div);
+
+                div.innerHTML = this.Temp( _event );
+
+                this.ControlMenu.appendChild(div);
+
 
             break;
                 
@@ -215,18 +268,26 @@ class EditClass {
                             background:{
                                 img_list:{
                                     self:{
-                                        src:form.querySelector("#url").value
+                                        src:form.querySelector("#url").value,
+                                        color:this.config.info.background.img_list.self.color
                                     },
                                     game_pass:{
-                                        src:form.querySelector("#game_pass").value
+                                        src:form.querySelector("#game_pass").value,
+                                        color:this.config.info.background.img_list.game_pass.color
                                     },
                                     game_over:{
-                                        src:form.querySelector("#game_over").value
+                                        src:form.querySelector("#game_over").value,
+                                        color:this.config.info.background.img_list.game_over.color
                                     },
+                                    wall:{
+                                        src:'',
+                                        color:this.config.info.background.img_list.wall.color,
+                                        broke:this.config.info.background.img_list.wall.broke,
+                                        grid:parseInt(form.querySelector("#grid").value)
+                                    }
                                 },
                                 height:parseInt(form.querySelector("#height").value),
                                 width:parseInt(form.querySelector("#width").value),
-                                grid:parseInt(form.querySelector("#grid").value),
                                 next_stage:form.querySelector("#next_stage").value
                             },
                             config:this.config
@@ -309,10 +370,16 @@ class EditClass {
                         id:_event,
                         img_list:{
                             self:{
-                                src:form.querySelector("#img_self").value
+                                src:form.querySelector("#img_self").value,
+                                color:this.config.info[_event].img_list.self.color
                             },
                             bullet:{
-                                src:form.querySelector("#img_bullet").value
+                                src:form.querySelector("#img_bullet").value,
+                                color:this.config.info[_event].img_list.bullet.color
+                            },
+                            collision:{
+                                src:form.querySelector("#img_collision").value,
+                                color:this.config.info[_event].img_list.collision.color
                             }
                         },
                         bullet:{
@@ -387,16 +454,17 @@ class EditClass {
 
                 div.innerHTML = this.Temp( _event );
 
+                this.ControlMenu.appendChild(div);
+
                 if(Ex.canvas[ _event ][ _event ]!==undefined)
                 {
                     div.dataset.unit_type = _event;
                     div.dataset.unit_id = _event;
+
                     div.innerHTML += this.Temp(`delete_unit`);
+
+
                 }
-
-
-
-                this.ControlMenu.appendChild(div);
 
 
                 if(Ex.canvas[ _event ][ _event ]!==undefined)
@@ -406,9 +474,13 @@ class EditClass {
 
                     form.querySelector("#img_self").value = unit.img_list.self.src;
                     form.querySelector("#img_bullet").value = unit.img_list.bullet.src;
+                    form.querySelector("#img_collision").value = unit.img_list.collision.src;
 
                     form.querySelector("#img_self").setAttribute("disabled","disabled");
                     form.querySelector("#img_bullet").setAttribute("disabled","disabled");
+                    form.querySelector("#img_collision").setAttribute("disabled","disabled");
+                    
+                    
 
 
                     
@@ -476,7 +548,7 @@ class EditClass {
                 {
                     var form = document.querySelector(`#CreateForm${_event}`);
 
-                    Ex.canvas.background.grid = parseInt(form.querySelector("#grid").value);
+                    Ex.canvas.background.img_list.wall.grid = parseInt(form.querySelector("#grid").value);
 
                     return;
                 }
@@ -492,7 +564,7 @@ class EditClass {
 
                 this.ControlMenu.appendChild(div);
 
-                div.querySelector("#grid").value = Ex.canvas.background.grid;
+                div.querySelector("#grid").value = Ex.canvas.background.img_list.wall.grid;
 
 
             break;
@@ -509,22 +581,33 @@ class EditClass {
 
                 this.WallColor();
 
-                var opacity = this.config.info.background.wall.color.substr(-1,1);
+                
+
+                var opacity = Ex.canvas.background.img_list.wall.color.substr(-1,1);
 
                 e.target.value = this.config.msg.wall_color[(opacity==="F")?0:1];
 
             break;
 
-            case "WallColor":
 
-                this.WallColor();
+            case "AIEnabled":
+
+                var form = e.target.parentElement;      
+
+                var unit_type = form.querySelector("#unit_type").value;
+                var unit_id = form.querySelector("#unit_id").value;
+
+                console.log(unit_type);
+                console.log(unit_id);
+            
+                Ex.canvas[unit_type][unit_id].AI_config.enabled = !Ex.canvas[unit_type][unit_id].AI_config.enabled;
+            
+
+                e.target.value = (Ex.canvas[unit_type][unit_id].AI_config.enabled)?Ex.config.msg.OnOff[1]:Ex.config.msg.OnOff[0];
 
             break;
 
-
             case "AIEdit":
-
-
 
                 if(Ex.canvas.c===undefined)
                 {
@@ -546,9 +629,10 @@ class EditClass {
                         arg[obj.id] = parseFloat(obj.value);
                     }
 
-                    arg.enemy_id = form.querySelector("#enemy_id").value;
+                    arg.unit_id = form.querySelector("#unit_id").value;
+                    arg.unit_type = form.querySelector("#unit_type").value;
 
-                    Ex.canvas.enemy[form.querySelector("#enemy_id").value].AI_config = arg;
+                    Ex.canvas[form.querySelector("#unit_type").value][form.querySelector("#unit_id").value].AI_config = arg;
 
                     return;
                 }
@@ -562,13 +646,23 @@ class EditClass {
 
                 this.ControlMenu.appendChild(div);
 
+                var unit_type = e.target.dataset.unit_type;
+                var unit_id = e.target.dataset.unit_id;
+
+                div.querySelector("span").innerHTML = (unit_type==="player")?"玩家":"敵人";
 
 
-                div.querySelector("#enemy_id").value = e.target.dataset.enemy_id;
+                div.querySelector("#unit_type").value = unit_type;
+                div.querySelector("#unit_id").value = unit_id;
+
+                if(Ex.canvas[unit_type][unit_id].AI_config===undefined)
+                {
+                    Ex.canvas[unit_type][unit_id].AI = new AIClass(Ex.canvas[unit_type][unit_id]);
+                }
 
 
-                var Ex_AI_config = Ex.canvas.enemy[e.target.dataset.enemy_id].AI_config||{};
-                var config = this.config.info.AI;
+                var Ex_AI_config = Ex.canvas[unit_type][unit_id].AI_config||{};
+                var config = this.config.info.AI_config;
 
                 div.querySelector("#up").value = (Ex_AI_config.up!==undefined)?Ex_AI_config.up:config.up;
 
@@ -588,7 +682,7 @@ class EditClass {
 
                 div.querySelector("#w_max").value = (Ex_AI_config.w_max!==undefined)?Ex_AI_config.w_max:config.w_max;
 
-                
+                div.querySelector("#AIEnabled").value = (Ex.canvas[unit_type][unit_id].AI_config.enabled)?Ex.config.msg.OnOff[1]:Ex.config.msg.OnOff[0];
 
 
             break;
@@ -597,103 +691,25 @@ class EditClass {
 
             
             case "SaveOnline":
-
-                if(Ex.canvas.enemy!==undefined) 
-                {
-                    for(var name in Ex.canvas.enemy)
-                    {
-                        Ex.canvas.enemy[name].AI = {};
-                    }
-                }
-
-                /*
-                var out_json = {
-                    background:Ex.canvas.background,
-                    player:Ex.canvas.player,
-                    enemy:Ex.canvas.enemy,
-                    wall:Ex.canvas.wall
-                };
-                */
-
-                var db_json = {
-                    background:{
-                        self:Ex.canvas.background,
-                        wall:Ex.canvas.wall
-                    },
-                    player:Ex.canvas.player,
-                    enemy:Ex.canvas.enemy
-                }
-
-
-                this.SaveLoad({
-                    mode:"save",
-                    stage:Ex.flag.Storage.local.stage||(new Date().getTime()).toString(36).substr(-6,6),
-                    db_json: db_json
-                });
-
-            break;
-
-
             case "LoadOnline":
 
+                
+
                 this.SaveLoad({
-                    mode:"load",
-                    stage:prompt("請輸入關卡編號"),
-                    db_json: db_json
+                    mode:_event
                 });
 
             break;
 
+            case "LoadUnit":
+            case "SaveUnit":
+                this.SaveLoad({
+                    mode:`${_event}_${e.target.dataset.unit}`
+                });
 
+            break;
 
-            case "OutConfig":
-
-                
-                for(var name in Ex.canvas.enemy)
-                    delete Ex.canvas.enemy[name].AI;
             
-                
-                var out_json = {
-                    background:Ex.canvas.background,
-                    player:Ex.canvas.player,
-                    enemy:Ex.canvas.enemy,
-                    wall:Ex.canvas.wall
-                }
-
-                var file = document.createElement("a");
-                file.style.display = "none";
-                file.setAttribute('href',`data:text/plain;charset=utf-8,${encodeURIComponent(btoa(JSON.stringify(out_json)))}`);
-                file.setAttribute('download','設定檔');
-                document.body.appendChild(file);
-
-                file.click();
-
-                file.remove();
-
-            break;
-
-            case "InConfig":
-
-                var input = document.querySelector(`#ConfigTxt`);
-                var reader = new FileReader();
-
-                input.onchange = ()=>{
-
-                    reader.readAsText(input.files[0]);
-                }
-                
-                reader.onload = ()=>{
-
-                    this.DefaultGame( reader.result );
-                    
-                }
-
-                document.querySelector(`#ConfigTxt`).click();
-
-            break;
-
-           
-
             
 
 
@@ -718,25 +734,45 @@ class EditClass {
 
                 document.querySelector(`[data-event="GameStart"]`).removeAttribute("disabled");
 
+                document.querySelector(`[data-event="GamePause"]`).setAttribute("disabled","disabled");
+
+
                 for(var name in Ex.canvas.player_bk) Ex.canvas.player[name] = Ex.canvas.player_bk[name];
                 for(var name in Ex.canvas.enemy_bk) Ex.canvas.enemy[name] = Ex.canvas.enemy_bk[name];
 
+
+                for(var key in Ex.canvas.wall) Ex.canvas.wall[key].mode = '';
+
+
                 for(var name in Ex.canvas.player)
                 {
-                    Ex.canvas.player[name].hp = Ex.canvas.player[name]._hp;
-                    Ex.canvas.player[name].x = Math.floor(Ex.canvas.c.width/10);
-                    Ex.canvas.player[name].y = Math.floor(Ex.canvas.c.height/2);
-                    Ex.canvas.player[name]._x = Math.floor(Ex.canvas.c.width/10);
-                    Ex.canvas.player[name]._y = Math.floor(Ex.canvas.c.height/2);
+                    var unit = Ex.canvas.player[name];
+
+                    unit.hp = unit._hp;
+                    unit.x = Math.floor(Ex.canvas.c.width/10);
+                    unit.y = Math.floor(Ex.canvas.c.height/2);
+                    unit._x = unit.x;
+                    unit._y = unit.y;
+
+                    if(this.BreakoutCloneMode)
+                    {
+                        unit.x = Math.floor(Ex.canvas.c.width * 0.5)-unit.w;
+                        unit.y = Math.floor(Ex.canvas.c.height * 0.8);
+                        unit._x = unit.x;
+                        unit._y = unit.y;
+                    }
                 }
 
                 for(var name in Ex.canvas.enemy)
                 {
-                    Ex.canvas.enemy[name].hp = Ex.canvas.enemy[name]._hp;
-                    Ex.canvas.enemy[name].x = Ex.canvas.c.width - Math.floor(Ex.canvas.c.width/8);
-                    Ex.canvas.enemy[name].y = Math.floor(Ex.canvas.c.height/2);
-                    Ex.canvas.enemy[name]._x = Ex.canvas.c.width - Math.floor(Ex.canvas.c.width/8);
-                    Ex.canvas.enemy[name]._y = Math.floor(Ex.canvas.c.height/2);
+
+                    var unit = Ex.canvas.enemy[name];
+
+                    unit.hp = unit._hp;
+                    unit.x = Ex.canvas.c.width - Math.floor(Ex.canvas.c.width/8);
+                    unit.y = Math.floor(Ex.canvas.c.height/2);
+                    unit._x = unit.x;
+                    unit._y = unit.y;
                 }
 
                 Ex.canvas.bullet = {};
@@ -766,6 +802,8 @@ class EditClass {
                 Ex.flag.game_start = true;
                 e.target.setAttribute("disabled","disabled");
 
+                document.querySelector(`[data-event="GamePause"]`).removeAttribute("disabled");
+
             break;
 
             case "CloseParent":
@@ -788,7 +826,7 @@ class EditClass {
             return;
         }
 
-        var color = this.config.info.background.wall.color;
+        var color = Ex.canvas.background.img_list.wall.color;
         
         if(opacity===undefined)
         {
@@ -796,7 +834,7 @@ class EditClass {
         }
         
 
-        this.config.info.background.wall.color = color.substr(0,color.length-1) + opacity;
+        Ex.canvas.background.img_list.wall.color = color.substr(0,color.length-1) + opacity;
 
 
         if(document.querySelector(`[data-event="WallColor"]`)!==null)
@@ -806,40 +844,138 @@ class EditClass {
 
     SaveLoad = (arg)=>{
 
-        if(arg.mode==="save")
+        var mode = arg.mode;
+
+        this.flag.mode = mode;
+
+        switch (mode)
         {
-            Ex.DB.ref(`${Ex.id}/${arg.stage}`).set(arg.db_json);
-            Ex.flag.Storage.local.stage = arg.stage;
-            Ex.func.StorageUpd();
-            
-            prompt("關卡儲存完成,關卡編號如下",`${arg.stage}`);
+            case "SaveOnline":
 
-            return;
-        }
-        
+                var stage = Ex.flag.Storage.local.stage||this.SerialCreate();
 
-        if(arg.mode==="load" && arg.stage!==null && arg.stage!=='')
-        {
-
-            Ex.DB.ref(`${Ex.id}/${arg.stage}`).once("value",r=>{
-
-                if(r.val()===null) return;
-
-                Ex.flag.Storage.local.stage = arg.stage;
+                for(var name in Ex.canvas.player) Ex.canvas.player[name].AI = {};
+                for(var name in Ex.canvas.enemy) Ex.canvas.enemy[name].AI = {};
+    
+    
+                var db_json = {
+                    background:Ex.canvas.background,
+                    wall:Ex.canvas.wall,
+                    player:Ex.canvas.player,
+                    enemy:Ex.canvas.enemy
+                }
+    
+                Ex.DB.ref(`${Ex.id}/${stage}`).set(db_json);
+                Ex.flag.Storage.local.stage = stage;
                 Ex.func.StorageUpd();
+                
+                document.querySelector("#stage_url").value = `${location.href}?stage=${stage}`;
+    
+                prompt("關卡儲存完成,關卡編號如下",`${stage}`);
 
-                this.EditGameLoad(r.val());
-            });
+    
+            break;
+
+
+            case "LoadOnline":
+
+                var stage = Ex.flag.Storage.local.stage||prompt("請輸入關卡編號");
+
+                Ex.DB.ref(`${Ex.id}/${stage}`).once("value",r=>{
+    
+                    if(r.val()===null)
+                    {
+                        alert('編號錯誤');
+                        return;
+                    }
+    
+                    Ex.flag.Storage.local.stage = stage;
+                    Ex.func.StorageUpd();
+
+
+                    this.LoadSet({
+                        mode:mode,
+                        db_json:r.val()
+                    })
+    
+                    
+                });
+            break;
+
+
+            case "Play":
+                var stage = new URL(location.href).searchParams.get("stage");
+
+
+                Ex.DB.ref(`${Ex.id}/${stage}`).once("value",r=>{
+    
+                    if(r.val()!==null)
+                    {    
+                        this.LoadSet({
+                            mode:mode,
+                            db_json:r.val()
+                        })
+                        
+                    }
+                });
+
+            break;
+
+            case "LoadUnit_player":
+            case "LoadUnit_enemy":
+
+                var stage = prompt("請輸入關卡編號");
+
+                Ex.DB.ref(`${Ex.id}/${stage}`).once("value",r=>{
+    
+                    if(r.val()!==null)
+                    {
+                        var unit = r.val()[mode.split("_")[1]]
+
+                        for(var name in unit) this.CreateUnit(unit[name]);
+                        
+                    }
+                });
+
+
+            break;
+
+
+            case "SaveUnit_player":
+            case "SaveUnit_enemy":
+
+                var stage = Ex.flag.Storage.local.stage||this.SerialCreate();
+
+                for(var name in Ex.canvas.player) Ex.canvas.player[name].AI = {};
+                for(var name in Ex.canvas.enemy) Ex.canvas.enemy[name].AI = {};
+    
+    
+                var db_json = {
+                    player:Ex.canvas.player,
+                    enemy:Ex.canvas.enemy
+                }
+
+
+                Ex.DB.ref(`${Ex.id}/${stage}`).once("value",r=>{
+    
+                    if(r.val()!==null)
+                    {
+                        var unit = r.val()[mode.split("_")[1]]
+
+                        for(var name in unit) this.CreateUnit(unit[name]);
+                        
+                    }
+                });
+
+
+            break;
+
         }
 
-        if(arg.mode==="play" && arg.stage!==null)
-        {
-            Ex.DB.ref(`${Ex.id}/${arg.stage}`).once("value",r=>{
 
 
-                this.PlayGameLoad(r.val());
-            });
-        }
+
+
 
 
     }
@@ -849,8 +985,11 @@ class EditClass {
 
         if(Ex.flag.game_start===false) return;
 
+        if(this.BreakoutCloneMode) return;
 
-        if( Object.keys(Ex.canvas.player).length===0 || Object.keys(Ex.canvas.enemy).length===0)
+        
+        if( Object.keys(Ex.canvas.player).length===0 || 
+        Object.keys(Ex.canvas.enemy).length===0)
         {
             console.log("GAME OVER");
 
@@ -891,7 +1030,7 @@ class EditClass {
                 y:0,
                 w:img.width||Ex.canvas.c.width,
                 h:img.height||Ex.canvas.c.height,
-                c:this.config.info.background[game_status].color
+                c:Ex.canvas.background.img_list[game_status].color
             }
 
             return;
@@ -903,7 +1042,6 @@ class EditClass {
 
     GamePause = ()=>{
         
-
         if(Ex.canvas.c===undefined)
         {
             return;
@@ -918,7 +1056,7 @@ class EditClass {
             div.id = `CreateFormPlayMenu`;
             this.DragendRegister(div);
 
-            div.innerHTML = this.Temp( 'play_menu' );
+            div.innerHTML = this.Temp( 'play_pause_menu' );
 
             this.ControlMenu.appendChild(div);
             
@@ -935,6 +1073,51 @@ class EditClass {
 
     }
 
+
+    LoadSet = (arg)=>{
+
+        var db_json = arg.db_json;
+
+        if(document.querySelector("canvas")!==null)
+        {
+            alert(this.config.msg.canvas_exist);
+            return;
+        }
+
+
+        Ex.canvas = new CanvasClass({
+            background:db_json.background,
+            wall:db_json.wall,
+            config:this.config
+        });
+
+        for(let name in db_json.player)
+        {
+            this.CreateUnit(db_json.player[name]);
+        }
+        for(let name in db_json.enemy)
+        {
+            this.CreateUnit(db_json.enemy[name]);
+            
+        }
+
+
+        if(arg.mode==="LoadOnline")
+        {
+            document.querySelector(`[data-event="CreateCanvas"]`).value = this.config.msg.CreateCanvas[1];
+            
+            Ex.canvas.c.addEventListener("mousedown",this.MouseDown);
+
+
+        }
+        else if(arg.mode==="Play")
+        {
+            this.WallColor('0');
+        }
+
+    }
+
+
     PlayGameLoad = (db_json)=>{
 
         if(document.querySelector("canvas")!==null)
@@ -944,8 +1127,8 @@ class EditClass {
         }
 
         Ex.canvas = new CanvasClass({
-            background:db_json.background.self,
-            wall:db_json.background.wall,
+            background:db_json.background,
+            wall:db_json.wall,
             config:this.config
         });
 
@@ -974,8 +1157,8 @@ class EditClass {
         }
 
         Ex.canvas = new CanvasClass({
-            background:db_json.background.self,
-            wall:db_json.background.wall,
+            background:db_json.background,
+            wall:db_json.wall,
             config:this.config
         });
 
@@ -995,54 +1178,6 @@ class EditClass {
         }
 
         Ex.canvas.c.addEventListener("mousedown",this.MouseDown);
-    }
-
-    DefaultGame = (txt)=>{
-
-        if(document.querySelector("canvas")!==null)
-        {
-            alert(this.config.msg.canvas_exist);
-            return;
-        }
-        
-
-        var json = JSON.parse(atob(txt));
-
-        Ex.canvas = new CanvasClass({
-        
-            background:json.background,
-            wall:json.wall,
-            config:this.config
-
-        });
-
-        
-        
-        var _t = setInterval(()=>{
-
-            if(Ex.canvas.anima_timer!==undefined)
-            {
-                for(let name in json.player)
-                {
-                    this.CreateUnit(json.player[name]);
-                }
-
-
-                for(let name in json.enemy)
-                {
-                    this.CreateUnit(json.enemy[name]);
-                    
-                }
-        
-                Ex.canvas.c.addEventListener("mousedown",this.MouseDown);
-                clearInterval(_t);
-            }
-
-        },100);
-
-
-        
-
     }
 
 
@@ -1100,6 +1235,63 @@ class EditClass {
         });
     }
 
+    SerialCreate = ()=>{
+
+        var d = new Date().getTime().toString(36);
+
+        return d;
+
+    }
+
+
+
+    BreakoutCloneFunc = ()=>{
+
+        this.BreakoutCloneMode = true;
+
+        var unit = Ex.config.info.BreakoutClonePlayer;
+
+        for(var key in unit.control) unit.control[key] = unit.control[key].toString().toUpperCase();
+
+
+        unit.type = "player";
+        unit.id = "BreakoutClonePlayer";
+        unit.bullet.mode = "reflex";
+        unit.bullet.reflex_count = 99;
+        unit.x = Math.floor(Ex.canvas.c.width * 0.5)-unit.w;
+        unit.y = Math.floor(Ex.canvas.c.height * 0.8);
+
+        this.CreateUnit(unit);
+
+
+        var obj = unit;
+
+        var id = `${unit.id}_${new Date().getTime()}`;
+
+        Ex.canvas.bullet[ id ] = {
+            id:id ,
+            unit:{
+                id:obj.id,
+                type:obj.type
+            },
+            type:"bullet",
+            mode:obj.bullet.mode,
+            reflex_count:obj.bullet.reflex_count,
+            track_sec:obj.bullet.track_sec,
+            x:obj.x + Math.floor(obj.w/2) - Math.floor(obj.bullet.w/2),
+            y:obj.y - obj.bullet.h - 5,
+            x2:0,
+            y2:Ex.func.Rand( Ex.canvas.c.width ),
+            w:obj.bullet.w,
+            h:obj.bullet.h,
+            hp:obj.bullet.hp,
+            speed:obj.bullet.speed
+        }
+
+    }
+
+    
+
     
 
 
@@ -1109,16 +1301,54 @@ class EditClass {
         var html = ``;
         switch (name){
 
-            case "play":
+            case "default":
+
+                var stage_url = '';
+
+                if(Ex.flag.Storage.local.stage!==undefined)
+                {
+                    stage_url = `${location.href}?stage=${Ex.flag.Storage.local.stage}`;
+                }
 
                 html = `
-                
-                    <input type="button" data-event="GamePause" value="${Ex.config.msg.game_pause[0]}">
+                    <div ${(this.flag.mode==="Play")?'style="display:none;"':''}>
+                        <span style="color:#fff;">關卡網址：</span><input type="text" style="width:80%" id="stage_url" value="${stage_url}">
+                        <HR>
+
+                        <input type="button" data-event="BreakoutClone" value="打磚塊模式">
+                    
+                        <input type="button" data-event="CreateCanvas" value="${Ex.config.msg.CreateCanvas[0]}">
+
+                        <input type="button" data-event="player" value="${Ex.config.msg.Createplayer[0]}">
+                        <input type="button" data-event="enemy" value="${Ex.config.msg.Createenemy[0]}">
+
+                        <input type="button" data-event="WallEdit" value="障礙物設定">
+
+
+                        <input type="button" data-event="SaveOnline" value="儲存關卡">
+
+                        <input type="button" data-event="LoadOnline" value="讀取關卡">
+
+                        <input type="button" data-event="ClearStage" value="清除所有設定">
+
+                        <input type="button" id="TimerSec" value="">
+
+                        
+                        <HR>
+                    </div>
+
+                    <input type="button" disabled="disabled" data-event="GamePause" value="${Ex.config.msg.game_pause[0]}">
+
+
                     <input type="button" data-event="GameStart" value="${Ex.config.msg.game_start}">
-                
+
+                   
+                  
+
                 `;
 
             break;
+
 
 
             case "game_over":
@@ -1140,7 +1370,7 @@ class EditClass {
             break;
 
 
-            case "play_menu":
+            case "play_pause_menu":
 
                 html = `
                 
@@ -1152,60 +1382,12 @@ class EditClass {
             break;
 
 
-
-
-            case "default":
-                html = `
-
-                    <span style="color:#fff;">關卡網址：</span><input type="text" style="width:80%" value="${location.href}?stage=${Ex.flag.Storage.local.stage||''}">
-                    <HR>
-
-
-                    <input type="button" data-event="GamePause" value="${Ex.config.msg.game_pause[0]}">
-
-
-                    <input type="button" data-event="GameStart" value="${Ex.config.msg.game_start}">
-
-                    <input type="button" data-event="ClearStage" value="清除所有設定">
-                    
-
-                    <input type="button" data-event="CreateCanvas" value="${Ex.config.msg.CreateCanvas[0]}">
-
-                    <!--
-                    <input type="button" data-event="WallColor" value="${Ex.config.msg.wall_color[0]}">-->
-
-                    <input type="button" data-event="WallEdit" value="障礙物設定">
-
-
-
-                    <input type="button" data-event="player" value="${Ex.config.msg.Createplayer[0]}">
-                    <input type="button" data-event="enemy" value="${Ex.config.msg.Createenemy[0]}">
-
-                    <input type="button" data-event="SaveOnline" value="儲存關卡">
-
-                    <input type="button" data-event="LoadOnline" value="讀取關卡">
-
-                    <input type="button" id="TimerSec" value="">
-
-                    <!--
-
-                    <input type="button" data-event="OutConfig" value="匯出設定檔">
-                    
-                    <input type="button" data-event="InConfig" value="匯入設定檔">
-                    <input type="file" id="ConfigTxt" style="display:none">
-
-                    -->
-                `;
-
-            break;
-
-
             case "CreateCanvas":
 
                 html = `
-                    背景圖片網址：<input type="text" id="url" value="${this.config.info.background.src}"><BR>
+                    背景圖片網址：<input type="text" id="url" value="${this.config.info.background.img_list.self.src}"><BR>
 
-                    障礙物方格大小：<input type="number" id="grid" value="${this.config.info.background.wall.grid}"><BR>
+                    障礙物方格大小：<input type="number" id="grid" value="${this.config.info.background.img_list.wall.grid}"><BR>
 
                     過關畫面網址：<input type="text" id="game_pass" value=""><BR>
 
@@ -1219,7 +1401,7 @@ class EditClass {
 
                     <HR>
                     <input type="button" data-event="${name}" value="送出">
-                    ${this.Temp('Close')}
+                    ${this.Temp("Close")}
                 `;
 
             break;
@@ -1228,7 +1410,10 @@ class EditClass {
             case "player":
             case "enemy":
                 html =`
-                    單位圖片網址：<input type="text" id="img_self" value="${this.config.info[name].src}"><BR>
+
+                    <span>${(name==="player")?`玩家`:`敵人`}</span><HR>
+                    單位圖片網址：<input type="text" id="img_self" value="${this.config.info[name].img_list.self.src}"><BR>
+                    中彈圖片網址：<input type="text" id="img_collision" value="${this.config.info[name].img_list.collision.src}"><BR>
                     
 
                     血量：<input type="number" id="hp" value="${this.config.info[name].hp.v}"><BR>
@@ -1240,7 +1425,7 @@ class EditClass {
 
                     <HR>
 
-                    子彈圖片網址：<input type="text" id="img_bullet" value="${this.config.info[name].bullet.src}"><BR>
+                    子彈圖片網址：<input type="text" id="img_bullet" value="${this.config.info[name].img_list.bullet.src}"><BR>
 
                     子彈類型：<select id="bullet_mode">${this.Temp(`bullet_mode_${name}`)}</select><BR>
                     子彈攻擊力：<input type="number" id="bullet_hp" value="${this.config.info[name].bullet.hp}"><BR>
@@ -1258,6 +1443,7 @@ class EditClass {
                     追蹤子彈追蹤秒數：<input id="track_sec" type="number" value="${this.config.info[name].bullet.track_sec}"><BR>
 
                     <div ${(name==="enemy")?`style="display:none"`:""}>
+                    <HR>
                         <input id="up" data-value="${this.config.info[name].control.up}" value="上" 
                         data-event="ControlDirSet" type="button">：<span>${this.config.info[name].control.up}</span><BR>
 
@@ -1272,14 +1458,17 @@ class EditClass {
 
                     </div>
 
+                    <HR>
+                    <input type="button" data-unit="${name}" data-event="LoadUnit" value="讀取線上${(name==="player")?`玩家`:`敵人`}"><BR>
+                    <input type="button" data-unit="${name}" data-event="SaveUnit" value="儲存線上${(name==="player")?`玩家`:`敵人`}">
 
-                    ${(name==="enemy")?`
-                    <input type="button" data-enemy_id="${name}" data-event="AIEdit" value="AI行動設定">`:``
-                    }
+                    ${(name==="enemy")?
+                    `<HR>
+                    <input type="button" data-unit_type="${name}" data-unit_id="${name}" data-event="AIEdit" value="AI行動設定">`:``}
 
                     <HR>
                     <input type="button" data-event="${name}" value="送出">
-                    ${this.Temp('Close')}
+                    ${this.Temp("Close")}
                 `;
             break;
 
@@ -1307,9 +1496,10 @@ class EditClass {
             case "AIEdit":
                 
                 html = `
-                
+                    <span></span><HR>
                     移動機率設定<BR>
-                    <input type="hidden" id="enemy_id" value="">
+                    <input type="hidden" id="unit_type" value="">
+                    <input type="hidden" id="unit_id" value="">
                     上：<input id="up" type="number"> %<BR>
                     右：<input id="right" type="number"> %<BR>
                     下：<input id="down" type="number"> %<BR>
@@ -1326,8 +1516,10 @@ class EditClass {
                     左：<input id="w_min" type="number"><BR>
 
                     <HR>
+                    啟用AI：<input id="AIEnabled" data-event="AIEnabled" type="button" value="${Ex.config.msg.OnOff[0]}">
+                    <HR>
                     <input type="button" data-event="${name}" value="送出">
-                    ${this.Temp('Close')}
+                    ${this.Temp("Close")}
                 `;
 
             break;
@@ -1340,8 +1532,24 @@ class EditClass {
                     <input type="button" data-event="wall_set" value="${this.config.msg.wall_set[0]}"> <input type="button" data-event="wall_color" value="${this.config.msg.wall_color[0]}">
                     <HR>
                     <input type="button" data-event="${name}" value="送出">
-                    ${this.Temp('Close')}
+                    ${this.Temp("Close")}
                 
+                `;
+
+            break;
+
+
+            case "BreakoutClone":
+
+                html = `
+                    背景圖片網址：<input type="text" id="url" value="https://images.plurk.com/2EV7jlV5OBfjhF9h4g78Gr.jpg"><BR>
+
+                    磚塊大小：<input type="number" id="grid" value="${this.config.info.background.img_list.wall.grid}"><BR>
+
+
+                    <HR>
+                    <input type="button" data-event="${name}" value="送出">
+                    ${this.Temp("Close")}
                 `;
 
             break;

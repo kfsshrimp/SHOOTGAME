@@ -36,7 +36,7 @@ div[id^="CreateForm"]{
     position: fixed;
     padding: 10px;
     left: 30%;
-    top: 30%;
+    top: 10%;
     background:#fff;
     border: 2px solid #0f0;
     border-radius: 5px;
