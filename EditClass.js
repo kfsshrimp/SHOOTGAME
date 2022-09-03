@@ -1094,7 +1094,8 @@ class EditClass {
                         db_json:r
                     })
     
-                    
+                    document.querySelector("#stage_url").value = `${location.href}?stage=${Ex.flag.Storage.local.stage.play}`;
+
                 });
             break;
 

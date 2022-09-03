@@ -133,6 +133,7 @@ class BreakoutCloneClass {
     GameRestart = (_continue)=>{
 
         Ex.flag.game_start = false;
+        this.flag.MoveBall = true;
 
 
         if(_continue!==true)
