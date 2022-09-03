@@ -46,7 +46,7 @@ class ConfigClass{
                     },
                     wall:{
                         src:'',
-                        grid:10,
+                        grid:50,
                         hp:9999,
                         color:"#000000FF",
                         broke:"#00000000"
@@ -97,7 +97,7 @@ class ConfigClass{
                     h:20,
                     color:"#f00",
                     hp:99,
-                    speed:8,
+                    speed:6,
                     count:1,
                     rand:2,
                     reflex_count:99,
@@ -109,7 +109,7 @@ class ConfigClass{
                         through:"貫穿"
                     }
                 },
-                speed:5,
+                speed:6,
                 speed_shoot:1,
                 control:{
                     shoot:"KeyZ",

@@ -115,8 +115,8 @@ class CanvasClass{
                 else
                 {
                     this.Draw({
-                        img:wall.img,
-                        img_error:wall.img_error,
+                        img:this.background.img_list.wall.img,
+                        img_error:this.background.img_list.wall.img_error,
                         x:wall.x,
                         y:wall.y,
                         w:wall.w,

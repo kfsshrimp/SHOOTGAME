@@ -211,6 +211,12 @@ class EditClass {
 
             break;
 
+            case "wall_clear":
+
+                Ex.canvas.wall = {};
+
+            break;
+
 
             case "BreakoutClone":
 
@@ -220,9 +226,6 @@ class EditClass {
 
                     if(Ex.BreakoutCloneClass)
                     {
-                        
-
-
                         Ex.canvas.background.img_list.wall.grid = parseInt(form.querySelector("#grid").value);
 
                         
@@ -248,10 +251,10 @@ class EditClass {
 
                         Ex.canvas.background.memo = (form.querySelector("#memo").value);
 
+
                         Ex.canvas.background.img_list.wall.color = (form.querySelector("#wall_color").value) + 'FF';
 
                         Ex.canvas.background.img_list.wall.src = (form.querySelector("#wall_src").value);
-
 
                         Ex.canvas.player.BreakoutClonePlayer.img_list.bullet.src = (form.querySelector("#bullet_src").value);
 
@@ -309,8 +312,9 @@ class EditClass {
                     _player.img_list.self.src = (form.querySelector("#player_src").value);
                     _player.img_list.bullet.src = (form.querySelector("#bullet_src").value);
 
-                    _player.img_list.self.src = (form.querySelector("#player_color").value);
-                    _player.img_list.bullet.src = (form.querySelector("#bullet_color").value);
+
+                    _player.img_list.self.color = (form.querySelector("#player_color").value) + 'FF';
+                    _player.img_list.bullet.color = (form.querySelector("#bullet_color").value) + 'FF';
 
 
                     Ex.BreakoutCloneClass = new BreakoutCloneClass(this.config,_canvas,_player);
@@ -1043,12 +1047,16 @@ class EditClass {
                 {
                     stage = this.SerialCreate();
                 }
+
+                console.log(stage);
                 
 
                 for(var name in Ex.canvas.player) Ex.canvas.player[name].AI = {};
                 for(var name in Ex.canvas.enemy) Ex.canvas.enemy[name].AI = {};
     
     
+
+                
                 var db_json = {
                     type:(Ex.BreakoutCloneClass)?"BreakoutClone":"ShootGame",
                     background:Ex.canvas.background,
@@ -1084,7 +1092,7 @@ class EditClass {
                     }
     
                     Ex.flag.Storage.local.stage.edit = stage;
-                    Ex.flag.Storage.local.stage.play = this.SerialCreate(stage);
+                    Ex.flag.Storage.local.stage.play = r.play;
                     Ex.flag.Storage.local.stage.time = r.time;
                     Ex.func.StorageUpd();
 
@@ -1798,7 +1806,9 @@ class EditClass {
 
                 html = `
                     磚塊大小：<input type="number" id="grid"><hr>
-                    <input type="button" data-event="wall_set" value="${this.config.msg.wall_set[0]}"><hr>
+                    <input type="button" data-event="wall_set" value="${this.config.msg.wall_set[0]}">
+                    <input type="button" data-event="wall_clear" value="清除全部磚塊">
+                    <hr>
                     磚塊顏色：<input id="wall_color" type="color" value=${this.config.info.background.img_list.wall.color}><BR>
                     <br>(shift鍵搭配滑鼠移動或點擊設置或移除磚塊<BR>點擊按鈕切換設置或移除狀態)
                     <HR>
@@ -1831,7 +1841,7 @@ class EditClass {
                     圖片來源資訊(通關後顯示)<BR><textarea id="memo">https://www.youtube.com/watch?v=i1EQhrNZLKY</textarea><HR>
                     
 
-                    背景圖片網址：<input type="text" id="url" value="https://images.plurk.com/2EV7jlV5OBfjhF9h4g78Gr.jpg"><BR>
+                    背景圖片網址：<input type="text" id="url" value="https://img.youtube.com/vi/i1EQhrNZLKY/maxresdefault.jpg"><BR>
 
                     磚塊大小：<input type="number" id="grid" value="${this.config.info.background.img_list.wall.grid}"><BR>
 
