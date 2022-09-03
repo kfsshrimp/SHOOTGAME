@@ -205,8 +205,9 @@ class EditClass {
 
                 Ex.config = new ConfigClass();
                 this.config = Ex.config;
-
                 this.ControlMenu.innerHTML = this.Temp('default');
+
+                Ex.flag.Storage.stage = {};
                 
 
             break;
@@ -1091,7 +1092,7 @@ class EditClass {
                     }
     
                     Ex.flag.Storage.local.stage.edit = stage;
-                    Ex.flag.Storage.local.stage.play = this.SerialCreate(stage,"play");
+                    Ex.flag.Storage.local.stage.play = this.SerialCreate(stage,"edit");
                     Ex.flag.Storage.local.stage.time = r.time;
                     Ex.func.StorageUpd();
 
