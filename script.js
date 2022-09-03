@@ -45,7 +45,8 @@
                 "CanvasClass.js",
                 "EditClass.js",
                 "ConfigClass.js",
-                "AIClass.js"
+                "AIClass.js",
+                "BreakoutCloneClass.js"
             ]);
 
             Ex.css(
@@ -140,18 +141,37 @@
                 if(wall!==undefined)
                 {
                     var collision_x = (obj.x - wall.x - Math.floor(wall.w/2));
-                    
                     var collision_y = (obj.y - wall.y - Math.floor(wall.h/2));
 
 
+           
+                    if(collision_x>0) obj.ox = obj.x2-obj.x_p;
+                    if(collision_x<=0) obj.ox = obj.x2+obj.x_p;
+
+                    if(collision_y>0) obj.oy = obj.y2-obj.y_p;
+                    if(collision_y<=0) obj.oy = obj.y2+obj.y_p;
+                    
+                    obj.reflex_count-=1;
+
+                    /*
                     if(obj.x_d===-1) obj.ox = obj.x2-obj.x_p;
                     if(obj.x_d===1) obj.ox = obj.x2+obj.x_p;
 
                     if(obj.y_d===-1) obj.oy = obj.y2-obj.y_p;
                     if(obj.y_d===1) obj.oy = obj.y2+obj.y_p;
+                    */
 
-
-                    obj.reflex_count-=1;
+                    if(Ex.BreakoutCloneClass && wall.id==="BreakoutClonePlayer")
+                    {
+                        if( obj.x - wall.x >(wall.w/2) )
+                        {
+                            obj.ox = obj.x2 - 1 * (obj.x - wall.x)/wall.w*1;
+                        }
+                        else if(obj.x - wall.x<(wall.w/2))
+                        {
+                            obj.ox = obj.x2 + 1 * (wall.w - (obj.x - wall.x))/wall.w*1;
+                        }
+                    }
 
                     return;
                 }
@@ -216,87 +236,6 @@
 
 
             },
-            BulletMoveBreakoutClone:()=>{
-
-                for(let i in Ex.canvas.bullet)
-                {
-                    let obj = Ex.canvas.bullet[i];
-
-
-                    obj._x = obj._x||obj.x;
-                    obj._y = obj._y||obj.y;
-
-                    obj.ox = obj.ox||obj.x;
-                    obj.oy = obj.oy||obj.y;
-
-                    obj._speed = obj._speed||obj.speed;
-
-                    if(obj.ox>obj.x2) obj.x_d = -1;
-                    if(obj.ox<obj.x2) obj.x_d = 1;
-                    if(obj.ox===obj.x2) obj.x_d = 0;
-
-                    if(obj.oy>obj.y2) obj.y_d = -1;
-                    if(obj.oy<obj.y2) obj.y_d = 1;
-                    if(obj.oy===obj.y2) obj.y_d = 0;
-
-                    
-                    obj.x_l = Math.abs(obj.ox-obj.x2);
-                    obj.y_l = Math.abs(obj.oy-obj.y2);
-
-                    obj.x_p = (obj.x_l/obj.y_l>1)?1:(obj.x_l/obj.y_l);
-                    obj.y_p = (obj.y_l/obj.x_l>1)?1:(obj.y_l/obj.x_l);
-
-
-                    obj._x+=parseFloat(obj.speed)*obj.x_d*obj.x_p;
-                    obj._y+=parseFloat(obj.speed)*obj.y_d*obj.y_p;
-
-
-                    var hit_obj = Ex.func.BulletCollision(obj);
-
-                    if( hit_obj!==false )
-                    {
-                        obj.reflex_count+=1
-                        Ex.func.BulletReflex(obj,hit_obj);
-
-                        if(hit_obj.type==="wall")
-                        {
-                            hit_obj.hp-=obj.hp;
-                            if(hit_obj.hp<=0)
-                                delete Ex.canvas[hit_obj.type][hit_obj.id]; 
-                        }
-
-                    }
-                    else
-                    {
-                        obj.x = parseInt(obj._x);
-                        obj.y = parseInt(obj._y);
-    
-                        obj.speed = obj._speed;
-
-
-                        if(obj.mode==="reflex")
-                        {
-                            Ex.func.BulletReflex(obj);
-                        }
-
-                        if(obj.mode==="track")
-                        {
-                            Ex.func.BulletTrack(obj);
-                        }
-                    }
-
-
-                    if(
-                        obj._x+obj.w<=0 || obj._x>=Ex.canvas.c.width || 
-                        obj._y+obj.h<=0 || obj._y>=Ex.canvas.c.height
-                    )
-                    {
-                        delete Ex.canvas.bullet[i];
-                    }
-                    
-                }
-
-            },
             BulletMove:()=>{
 
 
@@ -335,13 +274,16 @@
 
                     var hit_obj = Ex.func.BulletCollision(obj);
 
+
+                    if(Ex.BreakoutCloneClass) obj.reflex_count = 999;
+
+                    
                     if( hit_obj!==false )
                     {
-                        if(hit_obj.type==="wall" && obj.mode==="reflex")
+                        if(obj.mode==="reflex")
                         {
                             Ex.func.BulletReflex(obj,hit_obj);
-                            
-                            continue;
+                            //if(hit_obj.type==="wall") continue;
                         }
 
 
@@ -354,22 +296,28 @@
                         {
                             obj.hp-=hit_obj.hp;
 
-
                             if(hit_obj.type!=="bullet")
                             {
                                 Ex.canvas[hit_obj.type+'_bk'] = Ex.canvas[hit_obj.type+'_bk']||{};
                                 Ex.canvas[hit_obj.type+'_bk'][hit_obj.id] = Ex.canvas[hit_obj.type][hit_obj.id];
 
-                                delete Ex.canvas[hit_obj.type][hit_obj.id];
+                                if(Ex.BreakoutCloneClass)
+                                    Ex.canvas[hit_obj.type][hit_obj.id].mode = "broke";
+                                else
+                                    delete Ex.canvas[hit_obj.type][hit_obj.id];
                             }
                             else
                             {
-                                delete Ex.canvas[hit_obj.type][hit_obj.id];
+                                if(Ex.BreakoutCloneClass)
+                                    Ex.canvas[hit_obj.type][hit_obj.id].mode = "broke";
+                                else
+                                    delete Ex.canvas[hit_obj.type][hit_obj.id];
                             }
 
                         }
                         else if(hit_obj.hp===obj.hp)
                         {
+                            console.log("===")
                             delete Ex.canvas.bullet[i];
 
                             if(hit_obj.type!=="bullet")
@@ -377,11 +325,17 @@
                                 Ex.canvas[hit_obj.type+'_bk'] = Ex.canvas[hit_obj.type+'_bk']||{};
                                 Ex.canvas[hit_obj.type+'_bk'][hit_obj.id] = Ex.canvas[hit_obj.type][hit_obj.id];
 
-                                delete Ex.canvas[hit_obj.type][hit_obj.id];
+                                if(Ex.BreakoutCloneClass)
+                                    Ex.canvas[hit_obj.type][hit_obj.id].mode = "broke";
+                                else
+                                    delete Ex.canvas[hit_obj.type][hit_obj.id];
                             }
                             else
                             {
-                                delete Ex.canvas[hit_obj.type][hit_obj.id];
+                                if(Ex.BreakoutCloneClass)
+                                    Ex.canvas[hit_obj.type][hit_obj.id].mode = "broke";
+                                else
+                                    delete Ex.canvas[hit_obj.type][hit_obj.id];
                             }
                         }
 
@@ -402,6 +356,16 @@
                         if(obj.mode==="track")
                         {
                             Ex.func.BulletTrack(obj);
+                        }
+                    }
+
+
+                    if(Ex.BreakoutCloneClass)
+                    {   
+                        if(obj._y+obj.h>=Ex.canvas.c.height)
+                        {
+                            delete Ex.canvas.bullet[i];
+                            Ex.BreakoutCloneClass.flag.life-=1;
                         }
                     }
 
@@ -456,11 +420,9 @@
                             
                             obj.speed = obj._speed;
                         }
-
                     }
 
-
-                    if(Ex.EditClass.BreakoutCloneMode!==true)
+                    if(Ex.BreakoutCloneClass===undefined)
                         Ex.func.UnitShoot(obj);
                 }
 
@@ -729,14 +691,10 @@
                 if(Ex.flag.game_start)
                 {
                     Ex.func.KeyEvent();
-                    //Ex.func.EnemyControl();
-                    //Ex.func.EnemyAI();
 
+                    Ex.func.BulletMove();
 
-                    if(Ex.EditClass.BreakoutCloneMode!==true)
-                        Ex.func.BulletMove();
-                    else
-                        Ex.func.BulletMoveBreakoutClone();
+                    
                 }
 
                 Ex.anima_timer = requestAnimationFrame(Ex.Ref);
@@ -755,6 +713,7 @@
             "EditClass",
             "ConfigClass",
             "AIClass",
+            "BreakoutCloneClass",
             "firebase"
         ];
 
@@ -771,7 +730,6 @@
                 Ex.DB = Ex.DB.database();
 
 
-                
                 Ex.EditClass = new EditClass();
                 Ex.EditClass.config = Ex.config;
 

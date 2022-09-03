@@ -48,8 +48,8 @@ class ConfigClass{
                         src:'',
                         grid:10,
                         hp:9999,
-                        color:"#000F",
-                        broke:"#000F"
+                        color:"#000000FF",
+                        broke:"#00000000"
                     },
                     game_pass:{
                         src:'',
@@ -75,27 +75,32 @@ class ConfigClass{
 
             },
             BreakoutClonePlayer:{
+                id:"BreakoutClonePlayer",
+                type:"player",
                 w:100,
                 h:10,
+                x:0.5,
+                y:0.9,
+                hp:1,
                 img_list:{
                     self:{
                         src:'',
-                        color:"#000"
+                        color:"#000000ff"
                     },
                     bullet:{
                         src:'',
-                        color:"#000"
+                        color:"#000000ff"
                     }
                 },
                 bullet:{
                     w:20,
                     h:20,
                     color:"#f00",
-                    hp:1,
+                    hp:99,
                     speed:8,
                     count:1,
                     rand:2,
-                    reflex_count:0,
+                    reflex_count:99,
                     track_sec:1,
                     mode:{
                         normal:"普通",
@@ -112,6 +117,7 @@ class ConfigClass{
                 }
             },
             player:{
+                type:"player",
                 w:20,
                 h:20,
                 img_list:{
@@ -162,6 +168,7 @@ class ConfigClass{
                 }
             },
             enemy:{
+                type:"enemy",
                 w:20,
                 h:20,
                 img_list:{

@@ -7,14 +7,15 @@ class EditClass {
             ControlDirSet:null,
             WallMode:true,
             mousedown:{},
-            mode:'',
-            BreakoutCloneMode:false
+            mode:''
         };
         var url_params = new URL(location.href).searchParams;
 
 
+        Ex.flag.Storage.local.stage = Ex.flag.Storage.local.stage||{};
+
         if(
-            Ex.flag.Storage.local.stage!==undefined && 
+            Ex.flag.Storage.local.stage.edit!==undefined && 
             url_params.get("stage")===null)
         {
             
@@ -36,7 +37,7 @@ class EditClass {
         this.ControlMenu = document.createElement("div");
 
         this.ControlMenu.id = "ControlMenu";
-        this.ControlMenu.innerHTML = this.Temp('default');
+        this.ControlMenu.innerHTML = this.Temp("default");
 
         this.ControlMenu.addEventListener("click",this.ClickEvent);
         window.addEventListener("keydown",this.KeyDown);
@@ -63,40 +64,68 @@ class EditClass {
     }
 
 
+
+    WallCheck = (x,y)=>{
+
+        var _return = false;
+        for(var id in Ex.canvas.wall)
+        {
+            var obj = Ex.canvas.wall[id];
+
+            if(x>=obj.x && x<=obj.x+obj.w &&
+                y>=obj.y && y<=obj.y+obj.h)
+                {
+                    _return = id;
+                }
+        }
+
+
+        return _return;
+    }
+
+    MouseMove = (e)=>{
+
+        this.SetWall(e);
+    }
+
     MouseDown = (e)=>{
+        
+        this.SetWall(e);
+    }
+
+
+    SetWall = (e)=>{
+        if(!e.shiftKey) return;
+        if(this.flag.SaveLoad==="Play") return;
+        
 
         if(this.flag.WallMode)
         {
-            var id = `wall_${new Date().getTime()}`;
+            if(this.WallCheck(e.offsetX,e.offsetY)) return;
+
+            let id = `wall_${new Date().getTime()}`;
 
             Ex.canvas.wall[id] = 
             {
                 id:id,
                 type:"wall",
+                img:Ex.canvas.background.img_list.wall.img,
+                img_error:Ex.canvas.background.img_list.wall.img_error,
                 x:e.offsetX - e.offsetX%Ex.canvas.background.img_list.wall.grid,
                 y:e.offsetY - e.offsetY%Ex.canvas.background.img_list.wall.grid,
                 w:Ex.canvas.background.img_list.wall.grid,
                 h:Ex.canvas.background.img_list.wall.grid,
                 hp:Ex.canvas.background.img_list.wall.hp,
-                color:Ex.canvas.background.img_list.wall.color
+                color:Ex.canvas.background.img_list.wall.color,
+                broke:Ex.canvas.background.img_list.wall.broke,
             };
         }
         else
         {
-            for(var id in Ex.canvas.wall)
-            {
-                var obj = Ex.canvas.wall[id];
+            var id = this.WallCheck(e.offsetX,e.offsetY);
 
-                if(e.offsetX>obj.x && e.offsetX<obj.x+obj.w &&
-                    e.offsetY>obj.y && e.offsetY<obj.y+obj.h)
-                    {
-                        delete Ex.canvas.wall[id];
-                    }
-
-            }
-
+            if(id) delete Ex.canvas.wall[id];
         }
-        
     }
 
     CreateUnit = (unit)=>{
@@ -155,6 +184,8 @@ class EditClass {
 
         var _event = e.target.dataset.event;
 
+        this.flag.ClickEvent = e.target.dataset.event;
+
         switch (_event){
 
             case "ClearStage":
@@ -166,6 +197,7 @@ class EditClass {
                 }
 
                 if(Ex.canvas.c) Ex.canvas.c.remove();
+                delete Ex.BreakoutCloneClass;
 
                 Ex.canvas = {};
                 //Ex.flag.Storage.local = {};
@@ -186,38 +218,102 @@ class EditClass {
                 {
                     var form = document.querySelector(`#CreateForm${_event}`);
 
+                    if(Ex.BreakoutCloneClass)
+                    {
+                        
 
-                    Ex.canvas = new CanvasClass({
-        
+
+                        Ex.canvas.background.img_list.wall.grid = parseInt(form.querySelector("#grid").value);
+
+                        
+                        Ex.canvas.player.BreakoutClonePlayer.speed = parseInt(form.querySelector("#speed").value);
+
+                        Ex.canvas.player.BreakoutClonePlayer.bullet.speed = parseInt(form.querySelector("#bullet_speed").value);
+
+
+                        Ex.canvas.player.BreakoutClonePlayer.bullet.h = parseInt(form.querySelector("#bullet_h").value);
+
+                        Ex.canvas.player.BreakoutClonePlayer.bullet.w = parseInt(form.querySelector("#bullet_h").value);
+
+
+                        Ex.canvas.player.BreakoutClonePlayer.w = parseInt(form.querySelector("#player_w").value);
+
+                        Ex.canvas.player.BreakoutClonePlayer.h = parseInt(form.querySelector("#player_h").value);
+
+
+                        Ex.canvas.background.BreakoutClone.life = parseInt(form.querySelector("#life").value);
+
+                        Ex.BreakoutCloneClass.flag.life = parseInt(form.querySelector("#life").value);
+
+
+                        Ex.canvas.background.memo = (form.querySelector("#memo").value);
+
+                        Ex.canvas.background.img_list.wall.color = (form.querySelector("#wall_color").value) + 'FF';
+
+                        Ex.canvas.background.img_list.wall.src = (form.querySelector("#wall_src").value);
+
+
+                        Ex.canvas.player.BreakoutClonePlayer.img_list.bullet.src = (form.querySelector("#bullet_src").value);
+
+                        Ex.canvas.player.BreakoutClonePlayer.img_list.bullet.color = (form.querySelector("#bullet_color").value) + 'FF';
+
+                        Ex.canvas.player.BreakoutClonePlayer.img_list.self.color = (form.querySelector("#player_color").value) + 'FF';
+
+
+                        Ex.canvas.player.BreakoutClonePlayer.img_list.self.src = (form.querySelector("#player_src").value);
+
+
+
+                        return;
+                    }
+                    
+
+
+                    var _canvas = {
                         background:{
+                            memo:(form.querySelector("#memo").value),
+                            BreakoutClone:{
+                                life:parseInt(form.querySelector("#life").value)
+                            },
                             img_list:{
                                 self:{
                                     src:form.querySelector("#url").value,
                                     color:this.config.info.background.img_list.self.color
                                 },
                                 wall:{
-                                    color:this.config.info.background.img_list.wall.color,
+                                    color:form.querySelector("#wall_color").value+"FF",
                                     broke:this.config.info.background.img_list.wall.broke,
                                     grid:parseInt(form.querySelector("#grid").value),
+                                    src:(form.querySelector("#wall_src").value),
                                     hp:1
-
                                 }
                             }
                         },
-                        config:this.config
-                    });
-
-                    Ex.canvas.c.addEventListener("mousedown",this.MouseDown);
-
-                    
-                    var _t = setInterval(()=>{
-                        if(Ex.canvas.anima_timer!==undefined)
-                        {
-                            this.BreakoutCloneFunc();
-                            clearInterval(_t);
+                        config:this.config,
+                        func:{
+                            mousedown:this.MouseDown,
+                            mousemove:this.MouseMove
                         }
-                    },0);
-                    
+                    }
+
+                    var _player = JSON.parse(JSON.stringify(Ex.config.info.BreakoutClonePlayer));
+
+
+                    _player.w = parseInt(form.querySelector("#player_w").value);
+                    _player.h = parseInt(form.querySelector("#player_h").value);
+                    _player.speed = parseInt(form.querySelector("#speed").value);
+                    _player.bullet.h = parseInt(form.querySelector("#bullet_h").value);
+                    _player.bullet.w = parseInt(form.querySelector("#bullet_h").value);
+                    _player.bullet.speed = parseInt(form.querySelector("#bullet_speed").value);
+
+                    _player.img_list.self.src = (form.querySelector("#player_src").value);
+                    _player.img_list.bullet.src = (form.querySelector("#bullet_src").value);
+
+                    _player.img_list.self.src = (form.querySelector("#player_color").value);
+                    _player.img_list.bullet.src = (form.querySelector("#bullet_color").value);
+
+
+                    Ex.BreakoutCloneClass = new BreakoutCloneClass(this.config,_canvas,_player);
 
                     form.remove();
                     return;
@@ -232,7 +328,70 @@ class EditClass {
                 this.ControlMenu.appendChild(div);
 
 
+                if(Ex.BreakoutCloneClass)
+                {
+                    div.querySelector("#url").setAttribute("disabled","disabled");
+
+                    /*
+                    div.querySelector("#bullet_h").setAttribute("disabled","disabled");
+
+                    div.querySelector("#bullet_src").setAttribute("disabled","disabled");
+                    */
+                    
+                    div.querySelector("#memo").value = Ex.canvas.background.memo;
+
+                    div.querySelector("#grid").value = Ex.canvas.background.img_list.wall.grid;
+
+                    div.querySelector("#player_color").value = Ex.canvas.player.BreakoutClonePlayer.img_list.self.color.substr(0,Ex.canvas.player.BreakoutClonePlayer.img_list.self.color.length-2);
+
+                    div.querySelector("#bullet_color").value = Ex.canvas.player.BreakoutClonePlayer.img_list.bullet.color.substr(0,Ex.canvas.player.BreakoutClonePlayer.img_list.bullet.color.length-2);
+
+
+                    div.querySelector("#wall_color").value = Ex.canvas.background.img_list.wall.color.substr(0,Ex.canvas.background.img_list.wall.color.length-2)
+
+
+
+                    div.querySelector("#wall_src").value = Ex.canvas.background.img_list.wall.src;
+
+
+                    div.querySelector("#speed").value = Ex.canvas.player.BreakoutClonePlayer.speed;
+
+                    div.querySelector("#bullet_speed").value = Ex.canvas.player.BreakoutClonePlayer.bullet.speed;
+
+                    div.querySelector("#bullet_h").value = Ex.canvas.player.BreakoutClonePlayer.bullet.h;
+
+                    div.querySelector("#bullet_src").value = Ex.canvas.player.BreakoutClonePlayer.img_list.bullet.src;
+
+
+                    div.querySelector("#player_src").value = Ex.canvas.player.BreakoutClonePlayer.img_list.self.src;
+
+                    div.querySelector("#player_w").value = Ex.canvas.player.BreakoutClonePlayer.w;
+
+                    div.querySelector("#player_h").value = Ex.canvas.player.BreakoutClonePlayer.h;
+                    
+
+
+                    div.querySelector("#life").value = Ex.BreakoutCloneClass.flag.life;
+
+                    
+                }
+
+
             break;
+
+            case "BreakoutCloneContinue":
+
+                Ex.BreakoutCloneClass.GameRestart(true);
+
+            break;
+
+
+            case "ShowImg":
+
+                Ex.BreakoutCloneClass.ShowImg();
+
+            break;
+
                 
             case "CreateCanvas":
 
@@ -245,8 +404,9 @@ class EditClass {
                 if(document.querySelector(`#CreateForm${_event}`)!==null)
                 {
                     var form = document.querySelector(`#CreateForm${_event}`);
-                    
 
+                    delete Ex.BreakoutCloneClass;
+                    
                     if(document.querySelector("canvas")!==null)
                     {
                         Ex.canvas.background.grid = parseInt(form.querySelector("#grid").value);
@@ -290,12 +450,14 @@ class EditClass {
                                 width:parseInt(form.querySelector("#width").value),
                                 next_stage:form.querySelector("#next_stage").value
                             },
-                            config:this.config
+                            config:this.config,
+                            func:{
+                                mousedown:this.MouseDown,
+                                mousemove:this.MouseMove
+                            }
                         });
     
                         
-    
-                        Ex.canvas.c.addEventListener("mousedown",this.MouseDown);
 
                         document.querySelector(`[data-event="${_event}"]`).value = this.config.msg[`${_event}`][1];
                         
@@ -335,6 +497,7 @@ class EditClass {
                     form.querySelector("#url").setAttribute("disabled","disabled");
                     form.querySelector("#height").setAttribute("disabled","disabled");
                     form.querySelector("#width").setAttribute("disabled","disabled");
+
                 }
 
             break;
@@ -581,12 +744,6 @@ class EditClass {
 
                 this.WallColor();
 
-                
-
-                var opacity = Ex.canvas.background.img_list.wall.color.substr(-1,1);
-
-                e.target.value = this.config.msg.wall_color[(opacity==="F")?0:1];
-
             break;
 
 
@@ -693,8 +850,6 @@ class EditClass {
             case "SaveOnline":
             case "LoadOnline":
 
-                
-
                 this.SaveLoad({
                     mode:_event
                 });
@@ -710,8 +865,6 @@ class EditClass {
             break;
 
             
-            
-
 
             case "ControlDirSet":
 
@@ -721,14 +874,18 @@ class EditClass {
 
             case "NextStage":
 
-                console.log(Ex.canvas.background.next_stage);
-
-
                 location.href = `${location.pathname}?stage=${Ex.canvas.background.next_stage}`;
 
             break;
 
             case "GameRestart":
+
+                if(Ex.BreakoutCloneClass)
+                {
+                    Ex.BreakoutCloneClass.GameRestart();
+                    return;
+                }
+                
 
                 Ex.flag.game_start = false;
 
@@ -743,10 +900,13 @@ class EditClass {
 
                 for(var key in Ex.canvas.wall) Ex.canvas.wall[key].mode = '';
 
+                Ex.canvas.bullet = {};
+                Ex.canvas.other_back = {};
+
 
                 for(var name in Ex.canvas.player)
                 {
-                    var unit = Ex.canvas.player[name];
+                    let unit = Ex.canvas.player[name];
 
                     unit.hp = unit._hp;
                     unit.x = Math.floor(Ex.canvas.c.width/10);
@@ -754,13 +914,9 @@ class EditClass {
                     unit._x = unit.x;
                     unit._y = unit.y;
 
-                    if(this.BreakoutCloneMode)
-                    {
-                        unit.x = Math.floor(Ex.canvas.c.width * 0.5)-unit.w;
-                        unit.y = Math.floor(Ex.canvas.c.height * 0.8);
-                        unit._x = unit.x;
-                        unit._y = unit.y;
-                    }
+
+                    
+
                 }
 
                 for(var name in Ex.canvas.enemy)
@@ -774,10 +930,6 @@ class EditClass {
                     unit._x = unit.x;
                     unit._y = unit.y;
                 }
-
-                Ex.canvas.bullet = {};
-                Ex.canvas.other_back = {};
-
 
 
                 if(document.querySelector("#CreateFormPlayMenu")!==null)
@@ -826,52 +978,87 @@ class EditClass {
             return;
         }
 
+        for(var id in Ex.canvas.wall)
+        {
+            var wall = Ex.canvas.wall[id];
+
+            var color = wall.color;
+        
+            if(opacity===undefined)
+            {
+                opacity = (color.substr(-2,2).toUpperCase()==="FF")?"00":"FF";
+            }
+
+            wall.color = color.substr(0,color.length-2) + opacity;
+        }
+
+        /*
         var color = Ex.canvas.background.img_list.wall.color;
         
         if(opacity===undefined)
         {
-            opacity = (color.substr(-1,1)==="F")?"0":"F";
+            opacity = (color.substr(-2,2).toUpperCase()==="FF")?"00":"FF";
         }
+        Ex.canvas.background.img_list.wall.color = color.substr(0,color.length-2) + opacity;
+        */
+
         
 
-        Ex.canvas.background.img_list.wall.color = color.substr(0,color.length-1) + opacity;
 
-
-        if(document.querySelector(`[data-event="WallColor"]`)!==null)
-        document.querySelector(`[data-event="WallColor"]`).value = this.config.msg.wall_color[(opacity==="F")?0:1];
+        if(document.querySelector(`[data-event="wall_color"]`)!==null)
+        {
+            document.querySelector(`[data-event="wall_color"]`).value = this.config.msg.wall_color[(opacity==="FF")?0:1];
+        }
+        
 
     }
 
     SaveLoad = (arg)=>{
 
         var mode = arg.mode;
-
-        this.flag.mode = mode;
+        this.flag.SaveLoad = mode;
 
         switch (mode)
         {
             case "SaveOnline":
 
-                var stage = Ex.flag.Storage.local.stage||this.SerialCreate();
+                if(Ex.canvas.c===undefined)
+                {
+                    alert(this.config.msg.canvas_no_exist);
+                    return;
+                }
+
+                var stage;
+                if(Ex.flag.Storage.local.stage.edit)
+                {
+                    stage = Ex.flag.Storage.local.stage;
+                }
+                else
+                {
+                    stage = this.SerialCreate();
+                }
+                
 
                 for(var name in Ex.canvas.player) Ex.canvas.player[name].AI = {};
                 for(var name in Ex.canvas.enemy) Ex.canvas.enemy[name].AI = {};
     
     
                 var db_json = {
+                    type:(Ex.BreakoutCloneClass)?"BreakoutClone":"ShootGame",
                     background:Ex.canvas.background,
                     wall:Ex.canvas.wall,
                     player:Ex.canvas.player,
-                    enemy:Ex.canvas.enemy
+                    enemy:Ex.canvas.enemy,
+                    time:stage.time
                 }
     
-                Ex.DB.ref(`${Ex.id}/${stage}`).set(db_json);
+                Ex.DB.ref(`${Ex.id}/${stage.edit}`).set(db_json);
                 Ex.flag.Storage.local.stage = stage;
                 Ex.func.StorageUpd();
                 
-                document.querySelector("#stage_url").value = `${location.href}?stage=${stage}`;
+                document.querySelector("#stage_url").value = `${location.href}?stage=${stage.play}`;
     
-                prompt("關卡儲存完成,關卡編號如下",`${stage}`);
+                prompt("關卡儲存完成,編輯用代碼如下",`${stage.edit}`);
 
     
             break;
@@ -879,23 +1066,26 @@ class EditClass {
 
             case "LoadOnline":
 
-                var stage = Ex.flag.Storage.local.stage||prompt("請輸入關卡編號");
+                var stage = Ex.flag.Storage.local.stage.edit||prompt("請輸入關卡編號");
 
                 Ex.DB.ref(`${Ex.id}/${stage}`).once("value",r=>{
     
-                    if(r.val()===null)
+                    r = r.val();
+                    if(r===null)
                     {
                         alert('編號錯誤');
                         return;
                     }
     
-                    Ex.flag.Storage.local.stage = stage;
+                    Ex.flag.Storage.local.stage.edit = stage;
+                    Ex.flag.Storage.local.stage.play = this.SerialCreate(stage);
+                    Ex.flag.Storage.local.stage.time = r.time;
                     Ex.func.StorageUpd();
 
 
                     this.LoadSet({
                         mode:mode,
-                        db_json:r.val()
+                        db_json:r
                     })
     
                     
@@ -906,6 +1096,8 @@ class EditClass {
             case "Play":
                 var stage = new URL(location.href).searchParams.get("stage");
 
+                stage = this.SerialCreate(stage);
+
 
                 Ex.DB.ref(`${Ex.id}/${stage}`).once("value",r=>{
     
@@ -915,7 +1107,6 @@ class EditClass {
                             mode:mode,
                             db_json:r.val()
                         })
-                        
                     }
                 });
 
@@ -925,6 +1116,9 @@ class EditClass {
             case "LoadUnit_enemy":
 
                 var stage = prompt("請輸入關卡編號");
+
+                stage = this.SerialCreate(stage);
+
 
                 Ex.DB.ref(`${Ex.id}/${stage}`).once("value",r=>{
     
@@ -944,7 +1138,7 @@ class EditClass {
             case "SaveUnit_player":
             case "SaveUnit_enemy":
 
-                var stage = Ex.flag.Storage.local.stage||this.SerialCreate();
+                var stage = Ex.flag.Storage.local.stage.edit||this.SerialCreate();
 
                 for(var name in Ex.canvas.player) Ex.canvas.player[name].AI = {};
                 for(var name in Ex.canvas.enemy) Ex.canvas.enemy[name].AI = {};
@@ -973,11 +1167,6 @@ class EditClass {
         }
 
 
-
-
-
-
-
     }
 
 
@@ -985,12 +1174,18 @@ class EditClass {
 
         if(Ex.flag.game_start===false) return;
 
-        if(this.BreakoutCloneMode) return;
+        if(Ex.BreakoutCloneClass)
+        {
+            Ex.BreakoutCloneClass.GameCheck();
+            return;
+        }
 
         
         if( Object.keys(Ex.canvas.player).length===0 || 
         Object.keys(Ex.canvas.enemy).length===0)
         {
+            
+
             console.log("GAME OVER");
 
             Ex.flag.game_start = false;
@@ -1085,34 +1280,50 @@ class EditClass {
         }
 
 
-        Ex.canvas = new CanvasClass({
+        var _canvas = {
             background:db_json.background,
             wall:db_json.wall,
-            config:this.config
-        });
+            config:this.config,
+            func:{
+                mousedown:this.MouseDown,
+                mousemove:this.MouseMove
+            }
+        }
 
-        for(let name in db_json.player)
+
+        if(db_json.type==="BreakoutClone")
         {
-            this.CreateUnit(db_json.player[name]);
+            var _player = db_json.player.BreakoutClonePlayer;
+
+
+            Ex.BreakoutCloneClass = new BreakoutCloneClass(this.config,_canvas,_player);
         }
-        for(let name in db_json.enemy)
+
+        if(db_json.type==="ShootGame")
         {
-            this.CreateUnit(db_json.enemy[name]);
-            
-        }
+            Ex.canvas = new CanvasClass(_canvas);
+
+            for(let name in db_json.player)
+            {
+                this.CreateUnit(db_json.player[name]);
+            }
+            for(let name in db_json.enemy)
+            {
+                this.CreateUnit(db_json.enemy[name]);
+                
+            }
+        } 
 
 
         if(arg.mode==="LoadOnline")
         {
+            if(document.querySelector(`[data-event="CreateCanvas"]`))
             document.querySelector(`[data-event="CreateCanvas"]`).value = this.config.msg.CreateCanvas[1];
             
-            Ex.canvas.c.addEventListener("mousedown",this.MouseDown);
-
-
         }
         else if(arg.mode==="Play")
         {
-            this.WallColor('0');
+            if(!Ex.BreakoutCloneClass) this.WallColor('0');
         }
 
     }
@@ -1129,7 +1340,11 @@ class EditClass {
         Ex.canvas = new CanvasClass({
             background:db_json.background,
             wall:db_json.wall,
-            config:this.config
+            config:this.config,
+            func:{
+                mousedown:this.MouseDown,
+                mousemove:this.MouseMove
+            }
         });
 
 
@@ -1159,7 +1374,11 @@ class EditClass {
         Ex.canvas = new CanvasClass({
             background:db_json.background,
             wall:db_json.wall,
-            config:this.config
+            config:this.config,
+            func:{
+                mousedown:this.MouseDown,
+                mousemove:this.MouseMove
+            }
         });
 
 
@@ -1177,7 +1396,7 @@ class EditClass {
             this.CreateUnit(db_json.enemy[name]);            
         }
 
-        Ex.canvas.c.addEventListener("mousedown",this.MouseDown);
+        
     }
 
 
@@ -1235,94 +1454,89 @@ class EditClass {
         });
     }
 
-    SerialCreate = ()=>{
+    SerialCreate = (s)=>{
 
-        var d = new Date().getTime().toString(36);
+        if( s!==undefined )
+        {
+            return btoa( parseInt("edit",36) +(atob(s) - parseInt("play",36) ) );
+        }
+        else
+        {
+            var d = new Date().getTime();
+            var _d = parseInt(d.toString().substr(4));
+    
+            return {
+                edit:btoa( (parseInt('edit',36) + _d) ),
+                play:btoa( (parseInt('play',36) + _d) ),
+                time:_d
+            };
 
-        return d;
+            
 
+        }
     }
 
 
+    
 
-    BreakoutCloneFunc = ()=>{
+    Rand = (array)=>{
 
-        this.BreakoutCloneMode = true;
-
-        var unit = Ex.config.info.BreakoutClonePlayer;
-
-        for(var key in unit.control) unit.control[key] = unit.control[key].toString().toUpperCase();
-
-
-        unit.type = "player";
-        unit.id = "BreakoutClonePlayer";
-        unit.bullet.mode = "reflex";
-        unit.bullet.reflex_count = 99;
-        unit.x = Math.floor(Ex.canvas.c.width * 0.5)-unit.w;
-        unit.y = Math.floor(Ex.canvas.c.height * 0.8);
-
-        this.CreateUnit(unit);
-
-
-        var obj = unit;
-
-        var id = `${unit.id}_${new Date().getTime()}`;
-
-        Ex.canvas.bullet[ id ] = {
-            id:id ,
-            unit:{
-                id:obj.id,
-                type:obj.type
-            },
-            type:"bullet",
-            mode:obj.bullet.mode,
-            reflex_count:obj.bullet.reflex_count,
-            track_sec:obj.bullet.track_sec,
-            x:obj.x + Math.floor(obj.w/2) - Math.floor(obj.bullet.w/2),
-            y:obj.y - obj.bullet.h - 5,
-            x2:0,
-            y2:Ex.func.Rand( Ex.canvas.c.width ),
-            w:obj.bullet.w,
-            h:obj.bullet.h,
-            hp:obj.bullet.hp,
-            speed:obj.bullet.speed
+        if( !Array.isArray(array) )
+        {
+            var _array = [];
+            for(var i=0;i<=array;i++ ) _array.push(i);
+            array = _array;
         }
 
+        for (let i = array.length - 1; i > 0; i--){
+
+            let j = Math.floor(Math.random() * (i + 1));
+
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+
+        return array.pop();
     }
-
-    
-
-    
 
 
 
     Temp = (name)=>{
 
         var html = ``;
+
+        this.flag.Temp = name;
+
         switch (name){
 
             case "default":
 
                 var stage_url = '';
 
-                if(Ex.flag.Storage.local.stage!==undefined)
+                if(Ex.flag.Storage.local.stage.play!==undefined)
                 {
-                    stage_url = `${location.href}?stage=${Ex.flag.Storage.local.stage}`;
+                    stage_url = `${location.href}?stage=${Ex.flag.Storage.local.stage.play}`;
                 }
 
                 html = `
-                    <div ${(this.flag.mode==="Play")?'style="display:none;"':''}>
+                    <div ${(this.flag.SaveLoad==="Play")?'style="display:none;"':''}>
                         <span style="color:#fff;">關卡網址：</span><input type="text" style="width:80%" id="stage_url" value="${stage_url}">
                         <HR>
 
                         <input type="button" data-event="BreakoutClone" value="打磚塊模式">
+
+                        <input type="button" data-event="WallEdit" value="障礙物設定">
                     
+
+
+
+<!--
                         <input type="button" data-event="CreateCanvas" value="${Ex.config.msg.CreateCanvas[0]}">
 
                         <input type="button" data-event="player" value="${Ex.config.msg.Createplayer[0]}">
                         <input type="button" data-event="enemy" value="${Ex.config.msg.Createenemy[0]}">
 
                         <input type="button" data-event="WallEdit" value="障礙物設定">
+-->
 
 
                         <input type="button" data-event="SaveOnline" value="儲存關卡">
@@ -1337,18 +1551,61 @@ class EditClass {
                         <HR>
                     </div>
 
+
                     <input type="button" disabled="disabled" data-event="GamePause" value="${Ex.config.msg.game_pause[0]}">
 
 
                     <input type="button" data-event="GameStart" value="${Ex.config.msg.game_start}">
 
                    
-                  
+
 
                 `;
 
             break;
 
+
+            case "BreakoutCloneContinue":
+
+
+                html = `
+                    剩餘球數：${Ex.BreakoutCloneClass.flag.life}
+                    <HR>
+                    <input type="button" data-event="GameRestart" value="重新開始">
+                    <input type="button" data-event="BreakoutCloneContinue" value="${Ex.config.msg.game_pause[1]}">
+                `;
+
+            break;  
+
+            case "BreakoutCloneOver":
+
+                html = `
+                    剩餘球數：${Ex.BreakoutCloneClass.flag.life}
+                    <HR>
+                    <input type="button" data-event="GameRestart" value="重新開始">
+                `;
+
+            break;
+
+            case "BreakoutClonePass":
+
+                html = `
+                    
+                    <div id="memo">
+                        <input type="button" value="通關成功">
+                     
+                            <hr>
+                                <textarea>${Ex.canvas.background.memo}</textarea>
+                            <hr>
+                      
+                        
+                        <input type="button" data-event="ShowImg" value="檢視原圖">
+                        <input type="button" data-event="GameRestart" value="再玩一次">
+                    </div>
+                `;
+
+
+            break;
 
 
             case "game_over":
@@ -1373,11 +1630,11 @@ class EditClass {
             case "play_pause_menu":
 
                 html = `
-                
-                <input type="button" data-event="GameRestart" value="重新開始">
-                <input type="button" data-event="GamePause" value="${Ex.config.msg.game_pause[1]}">
-            
-            `;
+                    ${(Ex.BreakoutCloneClass)?`剩餘球數：${Ex.BreakoutCloneClass.flag.life}
+                    <HR>`:``}
+                    <input type="button" data-event="GameRestart" value="重新開始">
+                    <input type="button" data-event="GamePause" value="${Ex.config.msg.game_pause[1]}">
+                `;
 
             break;
 
@@ -1400,7 +1657,7 @@ class EditClass {
                     寬：<input id="width" type="number" value="${this.config.info.background.w}"><BR>
 
                     <HR>
-                    <input type="button" data-event="${name}" value="送出">
+                    <input type="button" data-event="${name}" value="儲存">
                     ${this.Temp("Close")}
                 `;
 
@@ -1467,7 +1724,7 @@ class EditClass {
                     <input type="button" data-unit_type="${name}" data-unit_id="${name}" data-event="AIEdit" value="AI行動設定">`:``}
 
                     <HR>
-                    <input type="button" data-event="${name}" value="送出">
+                    <input type="button" data-event="${name}" value="儲存">
                     ${this.Temp("Close")}
                 `;
             break;
@@ -1518,7 +1775,7 @@ class EditClass {
                     <HR>
                     啟用AI：<input id="AIEnabled" data-event="AIEnabled" type="button" value="${Ex.config.msg.OnOff[0]}">
                     <HR>
-                    <input type="button" data-event="${name}" value="送出">
+                    <input type="button" data-event="${name}" value="儲存">
                     ${this.Temp("Close")}
                 `;
 
@@ -1528,10 +1785,10 @@ class EditClass {
             case "WallEdit":
 
                 html = `
-                    障礙物方格大小：<input type="number" id="grid"><BR>
-                    <input type="button" data-event="wall_set" value="${this.config.msg.wall_set[0]}"> <input type="button" data-event="wall_color" value="${this.config.msg.wall_color[0]}">
+                    障礙物方格大小：<input type="number" id="grid"><hr>
+                    <input type="button" data-event="wall_set" value="${this.config.msg.wall_set[0]}"> <input type="button" data-event="wall_color" value="${this.config.msg.wall_color[0]}"><br>(shift鍵搭配滑鼠移動或點擊設置或移除障礙物)
                     <HR>
-                    <input type="button" data-event="${name}" value="送出">
+                    <input type="button" data-event="${name}" value="儲存">
                     ${this.Temp("Close")}
                 
                 `;
@@ -1542,13 +1799,48 @@ class EditClass {
             case "BreakoutClone":
 
                 html = `
+                    
+                    圖片來源資訊(通關後顯示)<BR><textarea id="memo">https://www.youtube.com/watch?v=i1EQhrNZLKY</textarea><HR>
+                    
+
                     背景圖片網址：<input type="text" id="url" value="https://images.plurk.com/2EV7jlV5OBfjhF9h4g78Gr.jpg"><BR>
 
                     磚塊大小：<input type="number" id="grid" value="${this.config.info.background.img_list.wall.grid}"><BR>
 
+                    磚塊顏色：<input id="wall_color" type="color" value=${this.config.info.background.img_list.wall.color}><BR>
+
+                    磚塊圖片網址：<input id="wall_src" type="text" value=${this.config.info.background.img_list.wall.src}><BR>
+
+                    移動速度：<input type="number" id="speed" value="${this.config.info.BreakoutClonePlayer.speed}"><BR>
+
+
+                    球顏色：<input id="bullet_color" type="color" value=${this.config.info.BreakoutClonePlayer.img_list.bullet.color}><BR>
+
+                    球圖片網址：<input type="text" id="bullet_src" value="${this.config.info.BreakoutClonePlayer.img_list.bullet.src}"><BR>
+
+                    球大小：<input type="number" id="bullet_h" value="${this.config.info.BreakoutClonePlayer.bullet.h}"><BR>
+
+                    球速度：<input type="number" id="bullet_speed" value="${this.config.info.BreakoutClonePlayer.bullet.speed}"><BR>
+
+                    生命數：<input type="number" id="life" value="${this.config.info.BreakoutClonePlayer.hp}"><BR>
+
+
+
+                    板子顏色：<input id="player_color" type="color" value=${this.config.info.BreakoutClonePlayer.img_list.self.color}><BR>
+
+                    板子圖片：<input type="text" id="player_src" value="${this.config.info.BreakoutClonePlayer.img_list.self.src}"><BR>
+
+
+                    板子高度：<input type="number" id="player_h" value="${this.config.info.BreakoutClonePlayer.h}"><BR>
+
+                    板子長度：<input type="number" id="player_w" value="${this.config.info.BreakoutClonePlayer.w}"><BR>
+
+
+                    
+
 
                     <HR>
-                    <input type="button" data-event="${name}" value="送出">
+                    <input type="button" data-event="${name}" value="儲存">
                     ${this.Temp("Close")}
                 `;
 

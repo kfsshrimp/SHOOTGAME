@@ -11,8 +11,14 @@ class CanvasClass{
         this.bullet = this.bullet||{};
         this.wall = this.wall||{};
         this.other_back = this.other_back||{};
+        this.func = this.func||{};
 
-        this.flag = {}
+        this.flag = {};
+        
+
+        this.c.addEventListener("mousedown",this.func.mousedown);
+        this.c.addEventListener("mousemove",this.func.mousemove);
+
 
 
         for(var key in opt.c_config)
@@ -96,13 +102,28 @@ class CanvasClass{
             {
                 var wall = this.wall[key];
 
-                this.Draw({
-                    x:wall.x,
-                    y:wall.y,
-                    w:wall.w,
-                    h:wall.h,
-                    c:(wall.mode==="broke")?this.background.img_list.wall.broke:this.background.img_list.wall.color
-                });
+                if(wall.mode==="broke")
+                {
+                    this.Draw({
+                        x:wall.x,
+                        y:wall.y,
+                        w:wall.w,
+                        h:wall.h,
+                        c:wall.broke
+                    });
+                }
+                else
+                {
+                    this.Draw({
+                        img:wall.img,
+                        img_error:wall.img_error,
+                        x:wall.x,
+                        y:wall.y,
+                        w:wall.w,
+                        h:wall.h,
+                        c:wall.color
+                    });
+                }
             }
 
             for(var key in this.bullet)
@@ -171,6 +192,8 @@ class CanvasClass{
     HpShow = (obj)=>{
 
         obj._hp = obj._hp||obj.hp;
+
+        if(obj.id==="BreakoutClonePlayer") return;
 
         this.Draw({
             x:obj.x ,
