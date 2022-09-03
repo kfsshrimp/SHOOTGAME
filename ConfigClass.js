@@ -112,6 +112,7 @@ class ConfigClass{
                 speed:5,
                 speed_shoot:1,
                 control:{
+                    shoot:"KeyZ",
                     right:"ArrowRight",
                     left:"ArrowLeft",
                 }

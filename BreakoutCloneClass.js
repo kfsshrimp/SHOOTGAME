@@ -5,7 +5,8 @@ class BreakoutCloneClass {
         this.config = config;
         this.flag = {
             life:_canvas.background.BreakoutClone.life,
-            _life:_canvas.background.BreakoutClone.life
+            _life:_canvas.background.BreakoutClone.life,
+            MoveBall:true
         };
 
         Ex.canvas = new CanvasClass(_canvas);
@@ -109,6 +110,20 @@ class BreakoutCloneClass {
             h:obj.bullet.h,
             hp:obj.bullet.hp,
             speed:obj.bullet.speed
+        }
+    }
+
+    MoveBall = ()=>{
+
+        if(!this.flag.MoveBall) return;
+
+        for(let id in Ex.canvas.bullet)
+        {
+            let bullet = Ex.canvas.bullet[id];
+            let unit = Ex.canvas[bullet.unit.type][bullet.unit.id];
+
+            bullet.x = unit.x + Math.floor(unit.w/2) - Math.floor(bullet.w/2);
+            bullet.y = unit.y - bullet.h - 5;
         }
 
     }

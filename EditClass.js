@@ -347,7 +347,7 @@ class EditClass {
                     div.querySelector("#bullet_color").value = Ex.canvas.player.BreakoutClonePlayer.img_list.bullet.color.substr(0,Ex.canvas.player.BreakoutClonePlayer.img_list.bullet.color.length-2);
 
 
-                    div.querySelector("#wall_color").value = Ex.canvas.background.img_list.wall.color.substr(0,Ex.canvas.background.img_list.wall.color.length-2)
+                    div.querySelector("#wall_color").value = Ex.canvas.background.img_list.wall.color.substr(0,Ex.canvas.background.img_list.wall.color.length-2);
 
 
 
@@ -698,6 +698,8 @@ class EditClass {
 
             break;
 
+
+            case "BreakoutCloneWallEdit":
             case "WallEdit":
 
                 if(Ex.canvas.c===undefined)
@@ -712,6 +714,8 @@ class EditClass {
                     var form = document.querySelector(`#CreateForm${_event}`);
 
                     Ex.canvas.background.img_list.wall.grid = parseInt(form.querySelector("#grid").value);
+
+                    Ex.canvas.background.img_list.wall.color = (form.querySelector("#wall_color").value) + 'FF';
 
                     return;
                 }
@@ -728,6 +732,8 @@ class EditClass {
                 this.ControlMenu.appendChild(div);
 
                 div.querySelector("#grid").value = Ex.canvas.background.img_list.wall.grid;
+
+                div.querySelector("#wall_color").value = Ex.canvas.background.img_list.wall.color.substr(0,Ex.canvas.background.img_list.wall.color.length-2);
 
 
             break;
@@ -1524,12 +1530,16 @@ class EditClass {
 
                         <input type="button" data-event="BreakoutClone" value="打磚塊模式">
 
-                        <input type="button" data-event="WallEdit" value="障礙物設定">
+                        <input type="button" data-event="BreakoutCloneWallEdit" value="磚塊設定">
                     
+                        
 
 
 
 <!--
+
+
+                        <input type="button" data-event="WallEdit" value="障礙物設定">
                         <input type="button" data-event="CreateCanvas" value="${Ex.config.msg.CreateCanvas[0]}">
 
                         <input type="button" data-event="player" value="${Ex.config.msg.Createplayer[0]}">
@@ -1777,6 +1787,23 @@ class EditClass {
                     <HR>
                     <input type="button" data-event="${name}" value="儲存">
                     ${this.Temp("Close")}
+                `;
+
+            break;
+
+
+
+            case "BreakoutCloneWallEdit":
+
+                html = `
+                    磚塊大小：<input type="number" id="grid"><hr>
+                    <input type="button" data-event="wall_set" value="${this.config.msg.wall_set[0]}"><hr>
+                    磚塊顏色：<input id="wall_color" type="color" value=${this.config.info.background.img_list.wall.color}><BR>
+                    <br>(shift鍵搭配滑鼠移動或點擊設置或移除磚塊<BR>點擊按鈕切換設置或移除狀態)
+                    <HR>
+                    <input type="button" data-event="${name}" value="儲存">
+                    ${this.Temp("Close")}
+                
                 `;
 
             break;

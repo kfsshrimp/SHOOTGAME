@@ -694,8 +694,18 @@
 
                     Ex.func.BulletMove();
 
-                    
+                    Ex.BreakoutCloneClass.flag.MoveBall = false;
                 }
+
+
+                if(Ex.BreakoutCloneClass && !Ex.flag.game_start)
+                {
+                    Ex.func.KeyEvent();
+                    Ex.BreakoutCloneClass.MoveBall();
+                }
+
+
+
 
                 Ex.anima_timer = requestAnimationFrame(Ex.Ref);
 
