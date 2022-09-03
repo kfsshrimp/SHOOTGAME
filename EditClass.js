@@ -1048,7 +1048,6 @@ class EditClass {
                     stage = this.SerialCreate();
                 }
 
-                console.log(stage);
                 
 
                 for(var name in Ex.canvas.player) Ex.canvas.player[name].AI = {};
@@ -1092,7 +1091,7 @@ class EditClass {
                     }
     
                     Ex.flag.Storage.local.stage.edit = stage;
-                    Ex.flag.Storage.local.stage.play = r.play;
+                    Ex.flag.Storage.local.stage.play = this.SerialCreate(stage,"play");
                     Ex.flag.Storage.local.stage.time = r.time;
                     Ex.func.StorageUpd();
 
@@ -1111,7 +1110,7 @@ class EditClass {
             case "Play":
                 var stage = new URL(location.href).searchParams.get("stage");
 
-                stage = this.SerialCreate(stage);
+                stage = this.SerialCreate(stage,"play");
 
 
                 Ex.DB.ref(`${Ex.id}/${stage}`).once("value",r=>{
@@ -1469,11 +1468,11 @@ class EditClass {
         });
     }
 
-    SerialCreate = (s)=>{
+    SerialCreate = (s,type)=>{
 
         if( s!==undefined )
         {
-            return btoa( parseInt("edit",36) +(atob(s) - parseInt("play",36) ) );
+            return (type==="play")?btoa( parseInt("edit",36) +(atob(s) - parseInt("play",36) ) ):btoa( parseInt("play",36) +(atob(s) - parseInt("edit",36) ) )
         }
         else
         {
