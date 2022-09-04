@@ -212,6 +212,8 @@ class EditClass {
 
                 Ex.flag.Storage.local.stage = {};
                 Ex.func.StorageUpd();
+
+                location.reload();
                 
 
             break;
@@ -1029,6 +1031,8 @@ class EditClass {
                 Ex.func.StorageUpd();
                 
                 document.querySelector("#stage_url").value = `${location.href}?stage=${stage.play}`;
+
+                document.querySelector("#stage_url").nextElementSibling.innerHTML = `<a style="color:#fff;" target="_blank" href="${location.href}?stage=${stage.play}">關卡網址</a>`;
     
                 prompt("關卡儲存完成,編輯用代碼如下",`${stage.edit}`);
 
@@ -1492,7 +1496,7 @@ class EditClass {
 
                 html = `
                     <div ${(this.flag.SaveLoad==="Play")?'style="display:none;"':''}>
-                        <span style="color:#fff;">關卡網址：</span><input type="text" style="width:30%" id="stage_url" value="${(Ex.flag.Storage.local.stage.play!==undefined)?`${location.href}?stage=${Ex.flag.Storage.local.stage.play}`:``}"> ${(Ex.flag.Storage.local.stage.play!==undefined)?`<a style="color:#fff;" target="_blank" href="${location.href}?stage=${Ex.flag.Storage.local.stage.play}">關卡網址</a>`:``}
+                        <span style="color:#fff;">關卡網址：</span><input type="text" style="width:30%" id="stage_url" value="${(Ex.flag.Storage.local.stage.play!==undefined)?`${location.href}?stage=${Ex.flag.Storage.local.stage.play}`:``}"> <span>${(Ex.flag.Storage.local.stage.play!==undefined)?`<a style="color:#fff;" target="_blank" href="${location.href}?stage=${Ex.flag.Storage.local.stage.play}">關卡網址</a>`:``}</span>
                         <HR>
 
                         <input type="button" data-event="BreakoutClone" value="打磚塊模式">
@@ -1769,6 +1773,8 @@ class EditClass {
                     磚塊顏色：<input id="wall_color" type="color" value=${this.config.info.background.img_list.wall.color}><BR>
 
                     磚塊圖片網址：<input id="wall_src" type="text" value=${this.config.info.background.img_list.wall.src}><BR>
+
+                    
 
                     
 
