@@ -211,6 +211,7 @@ class EditClass {
                 this.ControlMenu.innerHTML = this.Temp('default');
 
                 Ex.flag.Storage.stage = {};
+                Ex.func.StorageUpd();
                 
 
             break;
