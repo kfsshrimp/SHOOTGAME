@@ -1491,7 +1491,7 @@ class EditClass {
 
                 html = `
                     <div ${(this.flag.SaveLoad==="Play")?'style="display:none;"':''}>
-                        <span style="color:#fff;">關卡網址：</span><input type="text" style="width:80%" id="stage_url" value="${(Ex.flag.Storage.local.stage.play!==undefined)?`${location.href}?stage=${Ex.flag.Storage.local.stage.play}`:``}">
+                        <span style="color:#fff;">關卡網址：</span><input type="text" style="width:30%" id="stage_url" value="${(Ex.flag.Storage.local.stage.play!==undefined)?`${location.href}?stage=${Ex.flag.Storage.local.stage.play}`:``}"> ${(Ex.flag.Storage.local.stage.play!==undefined)?`<a style="color:#fff;" target="_blank" href="${location.href}?stage=${Ex.flag.Storage.local.stage.play}">關卡網址</a>`:``}
                         <HR>
 
                         <input type="button" data-event="BreakoutClone" value="打磚塊模式">
