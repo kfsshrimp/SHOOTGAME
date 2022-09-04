@@ -36,6 +36,9 @@ class ConfigClass{
         }
 
         this.info = {
+            BreakoutClone:{
+                life:5
+            },
             background:{
                 w:800,
                 h:600,

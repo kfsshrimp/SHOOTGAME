@@ -1,5 +1,5 @@
 (()=>{
-    var Ex = {
+    Ex = {
         id:"SHOOTGAME",
         config:{},
         anima_timer:{},

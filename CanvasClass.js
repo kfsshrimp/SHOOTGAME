@@ -112,7 +112,7 @@ class CanvasClass{
                         y:wall.y,
                         w:wall.w,
                         h:wall.h,
-                        c:wall.broke
+                        c:this.background.img_list.wall.broke
                     });
                 }
                 else
@@ -124,7 +124,7 @@ class CanvasClass{
                         y:wall.y,
                         w:wall.w,
                         h:wall.h,
-                        c:wall.color
+                        c:this.background.img_list.wall.color
                     });
                 }
             }

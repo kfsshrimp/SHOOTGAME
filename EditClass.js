@@ -114,15 +114,11 @@ class EditClass {
             {
                 id:id,
                 type:"wall",
-                img:Ex.canvas.background.img_list.wall.img,
-                img_error:Ex.canvas.background.img_list.wall.img_error,
                 x:e.offsetX - e.offsetX%Ex.canvas.background.img_list.wall.grid,
                 y:e.offsetY - e.offsetY%Ex.canvas.background.img_list.wall.grid,
                 w:Ex.canvas.background.img_list.wall.grid,
                 h:Ex.canvas.background.img_list.wall.grid,
-                hp:Ex.canvas.background.img_list.wall.hp,
-                color:Ex.canvas.background.img_list.wall.color,
-                broke:Ex.canvas.background.img_list.wall.broke,
+                hp:Ex.canvas.background.img_list.wall.hp
             };
         }
         else
@@ -234,46 +230,7 @@ class EditClass {
 
                     if(Ex.BreakoutCloneClass)
                     {
-                        Ex.canvas.background.img_list.wall.grid = parseInt(form.querySelector("#grid").value);
-
-                        
-                        Ex.canvas.player.BreakoutClonePlayer.speed = parseInt(form.querySelector("#speed").value);
-
-                        Ex.canvas.player.BreakoutClonePlayer.bullet.speed = parseInt(form.querySelector("#bullet_speed").value);
-
-
-                        Ex.canvas.player.BreakoutClonePlayer.bullet.h = parseInt(form.querySelector("#bullet_h").value);
-
-                        Ex.canvas.player.BreakoutClonePlayer.bullet.w = parseInt(form.querySelector("#bullet_h").value);
-
-
-                        Ex.canvas.player.BreakoutClonePlayer.w = parseInt(form.querySelector("#player_w").value);
-
-                        Ex.canvas.player.BreakoutClonePlayer.h = parseInt(form.querySelector("#player_h").value);
-
-
-                        Ex.canvas.background.BreakoutClone.life = parseInt(form.querySelector("#life").value);
-
-                        Ex.BreakoutCloneClass.flag.life = parseInt(form.querySelector("#life").value);
-
-
-                        Ex.canvas.background.memo = (form.querySelector("#memo").value);
-
-
-                        Ex.canvas.background.img_list.wall.color = (form.querySelector("#wall_color").value) + 'FF';
-
-                        Ex.canvas.background.img_list.wall.src = (form.querySelector("#wall_src").value);
-
-                        Ex.canvas.player.BreakoutClonePlayer.img_list.bullet.src = (form.querySelector("#bullet_src").value);
-
-                        Ex.canvas.player.BreakoutClonePlayer.img_list.bullet.color = (form.querySelector("#bullet_color").value) + 'FF';
-
-                        Ex.canvas.player.BreakoutClonePlayer.img_list.self.color = (form.querySelector("#player_color").value) + 'FF';
-
-
-                        Ex.canvas.player.BreakoutClonePlayer.img_list.self.src = (form.querySelector("#player_src").value);
-
-
+                        Ex.BreakoutCloneClass.Update(form);
 
                         return;
                     }
@@ -1531,16 +1488,10 @@ class EditClass {
 
             case "default":
 
-                var stage_url = '';
-
-                if(Ex.flag.Storage.local.stage.play!==undefined)
-                {
-                    stage_url = `${location.href}?stage=${Ex.flag.Storage.local.stage.play}`;
-                }
 
                 html = `
                     <div ${(this.flag.SaveLoad==="Play")?'style="display:none;"':''}>
-                        <span style="color:#fff;">關卡網址：</span><input type="text" style="width:80%" id="stage_url" value="${stage_url}">
+                        <span style="color:#fff;">關卡網址：</span><input type="text" style="width:80%" id="stage_url" value="${(Ex.flag.Storage.local.stage.play!==undefined)?`${location.href}?stage=${Ex.flag.Storage.local.stage.play}`:``}">
                         <HR>
 
                         <input type="button" data-event="BreakoutClone" value="打磚塊模式">
@@ -1590,47 +1541,7 @@ class EditClass {
             break;
 
 
-            case "BreakoutCloneContinue":
-
-
-                html = `
-                    剩餘球數：${Ex.BreakoutCloneClass.flag.life}
-                    <HR>
-                    <input type="button" data-event="GameRestart" value="重新開始">
-                    <input type="button" data-event="BreakoutCloneContinue" value="${Ex.config.msg.game_pause[1]}">
-                `;
-
-            break;  
-
-            case "BreakoutCloneOver":
-
-                html = `
-                    剩餘球數：${Ex.BreakoutCloneClass.flag.life}
-                    <HR>
-                    <input type="button" data-event="GameRestart" value="重新開始">
-                `;
-
-            break;
-
-            case "BreakoutClonePass":
-
-                html = `
-                    
-                    <div id="memo">
-                        <input type="button" value="通關成功">
-                     
-                            <hr>
-                                <textarea>${Ex.canvas.background.memo}</textarea>
-                            <hr>
-                      
-                        
-                        <input type="button" data-event="ShowImg" value="檢視原圖">
-                        <input type="button" data-event="GameRestart" value="再玩一次">
-                    </div>
-                `;
-
-
-            break;
+            
 
 
             case "game_over":
@@ -1754,14 +1665,7 @@ class EditClass {
                 `;
             break;
 
-            case "delete_unit":
-
-                html = `
-                
-                    <input type="button" data-event="delete_unit" value="刪除單位">
-                `;
-
-            break;
+            
 
 
             case "bullet_mode_player":
@@ -1808,6 +1712,99 @@ class EditClass {
 
 
 
+            case "WallEdit":
+
+                html = `
+                    障礙物方格大小：<input type="number" id="grid"><hr>
+                    <input type="button" data-event="wall_set" value="${this.config.msg.wall_set[0]}"> <input type="button" data-event="wall_color" value="${this.config.msg.wall_color[0]}"><br>(shift鍵搭配滑鼠移動或點擊設置或移除障礙物)
+                    <HR>
+                    <input type="button" data-event="${name}" value="儲存">
+                    ${this.Temp("Close")}
+                
+                `;
+
+            break;
+
+
+            
+            
+
+
+            //////////////////////////////////////
+            case "Close":
+
+                html = `
+                    
+                    <input type="button" data-event="CloseParent" value="關閉">
+                `;
+
+            break;
+
+            case "delete_unit":
+
+                html = `
+                
+                    <input type="button" data-event="delete_unit" value="刪除單位">
+                `;
+
+            break;
+
+
+
+            ///////////////////////////////////////////////////////
+
+            case "BreakoutClone":
+
+                html = `
+                    
+                    圖片來源資訊(通關後顯示)<BR><textarea id="memo">https://www.youtube.com/watch?v=i1EQhrNZLKY</textarea><HR>
+                    
+
+                    背景圖片網址：<input type="text" id="url" value="https://img.youtube.com/vi/i1EQhrNZLKY/maxresdefault.jpg"><BR>
+
+                    <hr>
+                    磚塊大小：<input type="number" id="grid" value="${this.config.info.background.img_list.wall.grid}"><BR>
+
+                    磚塊顏色：<input id="wall_color" type="color" value=${this.config.info.background.img_list.wall.color}><BR>
+
+                    磚塊圖片網址：<input id="wall_src" type="text" value=${this.config.info.background.img_list.wall.src}><BR>
+
+                    
+
+                    <hr>
+                    球顏色：<input id="bullet_color" type="color" value=${this.config.info.BreakoutClonePlayer.img_list.bullet.color}><BR>
+
+                    球圖片網址：<input type="text" id="bullet_src" value="${this.config.info.BreakoutClonePlayer.img_list.bullet.src}"><BR>
+
+                    球大小：<input type="number" id="bullet_h" value="${this.config.info.BreakoutClonePlayer.bullet.h}"><BR>
+
+                    球速度：<input type="number" id="bullet_speed" value="${this.config.info.BreakoutClonePlayer.bullet.speed}"><BR>
+
+                    生命數：<input type="number" id="life" value="${this.config.info.BreakoutClone.life}"><BR>
+                    <hr>
+
+                    
+
+                    板子顏色：<input id="player_color" type="color" value=${this.config.info.BreakoutClonePlayer.img_list.self.color}><BR>
+
+                    板子圖片：<input type="text" id="player_src" value="${this.config.info.BreakoutClonePlayer.img_list.self.src}"><BR>
+
+
+                    板子高度：<input type="number" id="player_h" value="${this.config.info.BreakoutClonePlayer.h}"><BR>
+
+                    板子長度：<input type="number" id="player_w" value="${this.config.info.BreakoutClonePlayer.w}"><BR>
+
+                    板子速度：<input type="number" id="speed" value="${this.config.info.BreakoutClonePlayer.speed}"><BR>
+
+          
+
+                    <HR>
+                    <input type="button" data-event="${name}" value="儲存">
+                    ${this.Temp("Close")}
+                `;
+
+            break;
+
             case "BreakoutCloneWallEdit":
 
                 html = `
@@ -1826,79 +1823,55 @@ class EditClass {
             break;
 
 
-            case "WallEdit":
+            case "BreakoutCloneContinue":
+
 
                 html = `
-                    障礙物方格大小：<input type="number" id="grid"><hr>
-                    <input type="button" data-event="wall_set" value="${this.config.msg.wall_set[0]}"> <input type="button" data-event="wall_color" value="${this.config.msg.wall_color[0]}"><br>(shift鍵搭配滑鼠移動或點擊設置或移除障礙物)
+                    剩餘球數：${Ex.BreakoutCloneClass.flag.life}
                     <HR>
-                    <input type="button" data-event="${name}" value="儲存">
-                    ${this.Temp("Close")}
-                
+                    <input type="button" data-event="GameRestart" value="重新開始">
+                    <input type="button" data-event="BreakoutCloneContinue" value="${Ex.config.msg.game_pause[1]}">
                 `;
 
-            break;
+            break;  
 
-
-            case "BreakoutClone":
+            case "BreakoutCloneOver":
 
                 html = `
-                    
-                    圖片來源資訊(通關後顯示)<BR><textarea id="memo">https://www.youtube.com/watch?v=i1EQhrNZLKY</textarea><HR>
-                    
-
-                    背景圖片網址：<input type="text" id="url" value="https://img.youtube.com/vi/i1EQhrNZLKY/maxresdefault.jpg"><BR>
-
-                    磚塊大小：<input type="number" id="grid" value="${this.config.info.background.img_list.wall.grid}"><BR>
-
-                    磚塊顏色：<input id="wall_color" type="color" value=${this.config.info.background.img_list.wall.color}><BR>
-
-                    磚塊圖片網址：<input id="wall_src" type="text" value=${this.config.info.background.img_list.wall.src}><BR>
-
-                    移動速度：<input type="number" id="speed" value="${this.config.info.BreakoutClonePlayer.speed}"><BR>
-
-
-                    球顏色：<input id="bullet_color" type="color" value=${this.config.info.BreakoutClonePlayer.img_list.bullet.color}><BR>
-
-                    球圖片網址：<input type="text" id="bullet_src" value="${this.config.info.BreakoutClonePlayer.img_list.bullet.src}"><BR>
-
-                    球大小：<input type="number" id="bullet_h" value="${this.config.info.BreakoutClonePlayer.bullet.h}"><BR>
-
-                    球速度：<input type="number" id="bullet_speed" value="${this.config.info.BreakoutClonePlayer.bullet.speed}"><BR>
-
-                    生命數：<input type="number" id="life" value="${this.config.info.BreakoutClonePlayer.hp}"><BR>
-
-
-
-                    板子顏色：<input id="player_color" type="color" value=${this.config.info.BreakoutClonePlayer.img_list.self.color}><BR>
-
-                    板子圖片：<input type="text" id="player_src" value="${this.config.info.BreakoutClonePlayer.img_list.self.src}"><BR>
-
-
-                    板子高度：<input type="number" id="player_h" value="${this.config.info.BreakoutClonePlayer.h}"><BR>
-
-                    板子長度：<input type="number" id="player_w" value="${this.config.info.BreakoutClonePlayer.w}"><BR>
-
-
-                    
-
-
+                    剩餘球數：${Ex.BreakoutCloneClass.flag.life}
                     <HR>
-                    <input type="button" data-event="${name}" value="儲存">
-                    ${this.Temp("Close")}
+                    <input type="button" data-event="GameRestart" value="重新開始">
                 `;
 
             break;
-            
 
-            case "Close":
+            case "BreakoutClonePass":
 
                 html = `
                     
-                    <input type="button" data-event="CloseParent" value="關閉">
+                    <div id="memo">
+                        <input type="button" value="通關成功">
+                     
+                            <hr>
+                                <textarea>${Ex.canvas.background.memo}</textarea>
+                            <hr>
+                      
+                        
+                        <input type="button" data-event="ShowImg" value="檢視原圖">
+                        <input type="button" data-event="GameRestart" value="再玩一次">
+                    </div>
                 `;
 
+
             break;
+
+
+
+
+
+
+
+
 
         }
 
