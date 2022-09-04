@@ -1,7 +1,8 @@
 class EditClass {
 
-    constructor(opt = {}){
+    constructor(Ex,opt = {}){
         this.opt = opt;
+        this.Ex = Ex;
         
         this.flag = {
             ControlDirSet:null,
@@ -11,6 +12,7 @@ class EditClass {
         };
         var url_params = new URL(location.href).searchParams;
 
+        
 
         Ex.flag.Storage.local.stage = Ex.flag.Storage.local.stage||{};
 
@@ -66,6 +68,7 @@ class EditClass {
 
 
     WallCheck = (x,y)=>{
+        var Ex = this.Ex;
 
         var _return = false;
         for(var id in Ex.canvas.wall)
@@ -95,6 +98,8 @@ class EditClass {
 
 
     SetWall = (e)=>{
+        var Ex = this.Ex;
+
         if(!e.shiftKey) return;
         if(this.flag.SaveLoad==="Play") return;
         
@@ -129,6 +134,7 @@ class EditClass {
     }
 
     CreateUnit = (unit)=>{
+        var Ex = this.Ex;
 
         unit.img_list.self.img = new Image();
         this.ImgLoad(unit.img_list.self.img,
@@ -146,7 +152,7 @@ class EditClass {
                         left:"AI_LEFT"
                     }
 
-                    unit.AI = new AIClass(unit);
+                    unit.AI = new AIClass(Ex,unit);
                 }
                 
             },
@@ -165,7 +171,7 @@ class EditClass {
                         left:"AI_LEFT"
                     }
 
-                    unit.AI = new AIClass(unit);
+                    unit.AI = new AIClass(Ex,unit);
                 }
 
             }
@@ -181,6 +187,7 @@ class EditClass {
 
 
     ClickEvent = (e)=>{
+        var Ex = this.Ex;
 
         var _event = e.target.dataset.event;
 
@@ -318,7 +325,7 @@ class EditClass {
                     _player.img_list.bullet.color = (form.querySelector("#bullet_color").value) + 'FF';
 
 
-                    Ex.BreakoutCloneClass = new BreakoutCloneClass(this.config,_canvas,_player);
+                    Ex.BreakoutCloneClass = new BreakoutCloneClass(Ex,this.config,_canvas,_player);
 
                     form.remove();
                     return;
@@ -428,7 +435,7 @@ class EditClass {
                     else
                     {
 
-                        Ex.canvas = new CanvasClass({
+                        Ex.canvas = new CanvasClass(Ex,{
         
                             background:{
                                 img_list:{
@@ -594,7 +601,7 @@ class EditClass {
                         if(unit.type==="enemy")
                         {
                             cancelAnimationFrame(Ex.canvas[ _event ][ _event ].AI.anima_timer);
-                            unit.AI = new AIClass(unit);
+                            unit.AI = new AIClass(Ex,unit);
                         }
 
                         Ex.canvas[ _event ][ _event ] = unit;
@@ -825,7 +832,7 @@ class EditClass {
 
                 if(Ex.canvas[unit_type][unit_id].AI_config===undefined)
                 {
-                    Ex.canvas[unit_type][unit_id].AI = new AIClass(Ex.canvas[unit_type][unit_id]);
+                    Ex.canvas[unit_type][unit_id].AI = new AIClass(Ex,Ex.canvas[unit_type][unit_id]);
                 }
 
 
@@ -983,6 +990,8 @@ class EditClass {
 
     WallColor = ( opacity )=>{
 
+        var Ex = this.Ex;
+
         if(Ex.canvas.c===undefined)
         {
             alert(this.config.msg.canvas_no_exist);
@@ -1003,16 +1012,6 @@ class EditClass {
             wall.color = color.substr(0,color.length-2) + opacity;
         }
 
-        /*
-        var color = Ex.canvas.background.img_list.wall.color;
-        
-        if(opacity===undefined)
-        {
-            opacity = (color.substr(-2,2).toUpperCase()==="FF")?"00":"FF";
-        }
-        Ex.canvas.background.img_list.wall.color = color.substr(0,color.length-2) + opacity;
-        */
-
         
 
 
@@ -1025,6 +1024,7 @@ class EditClass {
     }
 
     SaveLoad = (arg)=>{
+        var Ex = this.Ex;
 
         var mode = arg.mode;
         this.flag.SaveLoad = mode;
@@ -1186,6 +1186,7 @@ class EditClass {
 
 
     GameCheck = ()=>{
+        var Ex = this.Ex;
 
         if(Ex.flag.game_start===false) return;
 
@@ -1251,6 +1252,7 @@ class EditClass {
 
 
     GamePause = ()=>{
+        var Ex = this.Ex;
         
         if(Ex.canvas.c===undefined)
         {
@@ -1285,6 +1287,7 @@ class EditClass {
 
 
     LoadSet = (arg)=>{
+        var Ex = this.Ex;
 
         var db_json = arg.db_json;
 
@@ -1311,12 +1314,12 @@ class EditClass {
             var _player = db_json.player.BreakoutClonePlayer;
 
 
-            Ex.BreakoutCloneClass = new BreakoutCloneClass(this.config,_canvas,_player);
+            Ex.BreakoutCloneClass = new BreakoutCloneClass(Ex,this.config,_canvas,_player);
         }
 
         if(db_json.type==="ShootGame")
         {
-            Ex.canvas = new CanvasClass(_canvas);
+            Ex.canvas = new CanvasClass(Ex,_canvas);
 
             for(let name in db_json.player)
             {
@@ -1345,6 +1348,7 @@ class EditClass {
 
 
     PlayGameLoad = (db_json)=>{
+        var Ex = this.Ex;
 
         if(document.querySelector("canvas")!==null)
         {
@@ -1352,7 +1356,7 @@ class EditClass {
             return;
         }
 
-        Ex.canvas = new CanvasClass({
+        Ex.canvas = new CanvasClass(Ex,{
             background:db_json.background,
             wall:db_json.wall,
             config:this.config,
@@ -1379,6 +1383,7 @@ class EditClass {
 
 
     EditGameLoad = (db_json)=>{
+        var Ex = this.Ex;
 
         if(document.querySelector("canvas")!==null)
         {
@@ -1386,7 +1391,7 @@ class EditClass {
             return;
         }
 
-        Ex.canvas = new CanvasClass({
+        Ex.canvas = new CanvasClass(Ex,{
             background:db_json.background,
             wall:db_json.wall,
             config:this.config,
@@ -1516,6 +1521,7 @@ class EditClass {
 
 
     Temp = (name)=>{
+        var Ex = this.Ex;
 
         var html = ``;
 

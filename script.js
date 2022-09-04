@@ -679,7 +679,6 @@
         Ex.func.StorageUpd( true );
 
 
-
         Ex.init();
         
         Ex.Ref = ()=>{
@@ -730,19 +729,28 @@
         var _t = setInterval(()=>{
 
             try{
+
+                
                 _class.forEach(o=>eval(o));
 
-
+                
+                
                 Ex.config = new ConfigClass();
+
+                
+
 
                 Ex.DB = firebase;
                 Ex.DB.initializeApp({databaseURL:Ex.config.DB.url});
                 Ex.DB = Ex.DB.database();
+             
+                
+                
 
-
-                Ex.EditClass = new EditClass();
+                Ex.EditClass = new EditClass(Ex);
                 Ex.EditClass.config = Ex.config;
 
+                
 
                 Ex.Ref();
 
@@ -750,13 +758,13 @@
                 clearInterval(_t);
 
                 
-
             }catch(e){
 
+                //console.log(e);
                 console.log('Load Class');
             }      
 
-        },1);
+        },100);
 
 
         

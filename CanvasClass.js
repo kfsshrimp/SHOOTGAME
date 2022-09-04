@@ -1,6 +1,7 @@
 class CanvasClass{
 
-    constructor(opt = {}){
+    constructor(Ex,opt = {}){
+        this.Ex = Ex;
 
         for(var key in opt) this[key] = opt[key];
 
@@ -14,6 +15,8 @@ class CanvasClass{
         this.func = this.func||{};
 
         this.flag = {};
+
+        
         
 
         this.c.addEventListener("mousedown",this.func.mousedown);
@@ -213,40 +216,6 @@ class CanvasClass{
 
     }
 
-
-    UnitArcRange = (unit)=>{
-
-
-        let start = -0.5,end = 1.5;
-        unit.x_d = (unit.x_d===undefined)?0:unit.x_d;
-        unit.y_d = (unit.y_d===undefined)?0:unit.y_d;
-
-     
-        if(unit.x_d===0 && unit.y_d===-1) {start = 0.3;end = -1.3;}
-        if(unit.x_d===0 && unit.y_d===1) {start = 1.3;end = 1.7;}
-
-        if(unit.y_d===0 && unit.x_d===1) {start = -0.2;end = 0.2;}
-        if(unit.y_d===0 && unit.x_d===-1) {start = 0.8;end = -0.8;}
-        
-
-        if(unit.x_d===1 && unit.y_d===1){start = -0.5;end = 0;}
-        if(unit.x_d===1 && unit.y_d===-1){start = 0;end = 0.5;}
-
-        if(unit.x_d===-1 && unit.y_d===-1){start = 0.5;end = 1;}
-        if(unit.x_d===-1 && unit.y_d===1){start = 1;end = 1.5;}
-     
-
-        this.Draw({
-            x:unit.x + Math.floor(unit.w/2),
-            y:unit.y + Math.floor(unit.h/2),
-            r:Math.floor(unit.w),
-            start:start,
-            end:end,
-            lineWidth:this.config.hw.dir.w,
-            strokeStyle:this.config.color.dir
-        });
-
-    }
 
 
     Draw = (arg)=>{

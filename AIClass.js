@@ -1,6 +1,7 @@
 class AIClass{
 
-    constructor(unit){
+    constructor(Ex,unit){
+        this.Ex = Ex;
 
         this.up = ()=>{ 
             Ex.flag.key[ unit.control.up ] = true;
@@ -31,6 +32,7 @@ class AIClass{
     }
 
     Ref = ()=>{
+        var Ex = this.Ex;
         try{
 
             if(Ex.flag.game_start && this.unit.AI_config.enabled)
@@ -51,6 +53,7 @@ class AIClass{
     }
 
     AI_MoveCheck = ()=>{
+        var Ex = this.Ex;
 
         var u = this.unit;
 
@@ -87,6 +90,7 @@ class AIClass{
 
 
     AI_Move = ()=>{
+        var Ex = this.Ex;
 
         var u = this.unit;
 

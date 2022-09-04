@@ -1,6 +1,7 @@
 class BreakoutCloneClass {
 
-    constructor(config,_canvas,_player){
+    constructor(Ex,config,_canvas,_player){
+        this.Ex = Ex;
 
         this.config = config;
         this.flag = {
@@ -9,7 +10,7 @@ class BreakoutCloneClass {
             MoveBall:true
         };
 
-        Ex.canvas = new CanvasClass(_canvas);
+        Ex.canvas = new CanvasClass(Ex,_canvas);
 
 
         this.SetUnit(_player);
@@ -18,9 +19,8 @@ class BreakoutCloneClass {
     }
 
     SetUnit = (_player)=>{
+        var Ex = this.Ex;
 
-
-        //console.log( JSON.parse(JSON.stringify(unit)) );
 
         if(Ex.canvas.anima_timer===undefined)
         {
@@ -46,18 +46,6 @@ class BreakoutCloneClass {
         for(var key in unit.control) unit.control[key] = unit.control[key].toString().toUpperCase();
 
 
-        /*
-        unit.speed = _player.speed;
-        unit.bullet.speed = _player.bullet.speed;
-        unit.bullet.h =  _player.bullet.h;
-        unit.bullet.w =  _player.bullet.h;
-        unit.img_list.bullet.src = _player.img_list.bullet.src;
-
-        unit.img_list.self.src = _player.img_list.self.src;
-        unit.w = _player.w;
-        unit.h = _player.h;
-        */
-
         
 
         unit.x = Math.floor(Ex.canvas.c.width * this.config.info.BreakoutClonePlayer.x)-Math.floor(unit.w/2);
@@ -77,6 +65,7 @@ class BreakoutCloneClass {
     }
 
     SetBullet = ()=>{
+        var Ex = this.Ex;
 
         var unit = this.unit;
         var obj = this.unit;
@@ -114,6 +103,7 @@ class BreakoutCloneClass {
     }
 
     MoveBall = ()=>{
+        var Ex = this.Ex;
 
         if(!this.flag.MoveBall) return;
 
@@ -131,6 +121,7 @@ class BreakoutCloneClass {
 
 
     GameRestart = (_continue)=>{
+        var Ex = this.Ex;
 
         Ex.flag.game_start = false;
         this.flag.MoveBall = true;
@@ -166,6 +157,7 @@ class BreakoutCloneClass {
 
 
     ShowImg = ()=>{
+        var Ex = this.Ex;
 
         var div = document.createElement("div");
         div.className = `ImgShow`;
@@ -178,7 +170,7 @@ class BreakoutCloneClass {
     }
 
     GameCheck = ()=>{
-
+        var Ex = this.Ex;
 
         if(this.flag.life<=0)
         {
