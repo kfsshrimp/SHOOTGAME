@@ -210,7 +210,7 @@ class EditClass {
                 this.config = Ex.config;
                 this.ControlMenu.innerHTML = this.Temp('default');
 
-                Ex.flag.Storage.stage = {};
+                Ex.flag.Storage.local.stage = {};
                 Ex.func.StorageUpd();
                 
 
